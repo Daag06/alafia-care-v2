@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#0A7C5C"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Alafia Care"/>
+<title>Alafia Care — Patient</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --green:#0A7C5C;
+  --green-light:#E6F5F0;
+  --green-mid:#1D9E75;
+  --green-dark:#065C42;
+  --gold:#F5A623;
+  --gold-light:#FEF3E2;
+  --red:#D63031;
+  --red-light:#FFEBEE;
+  --blue:#1A73E8;
+  --blue-light:#E8F0FE;
+  --text:#1A1A2E;
+  --text-mid:#4A4A6A;
+  --text-soft:#8888A0;
+  --bg:#F4F7F5;
+  --card:#FFFFFF;
+  --border:#E8EDE9;
+  --radius:16px;
+  --radius-sm:10px;
+  --shadow:0 2px 16px rgba(10,124,92,0.08);
+  --font:'Plus Jakarta Sans',sans-serif;
+  --mono:'Space Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--text)}
+#app{width:100%;max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;overflow:hidden}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 60%,var(--green-mid) 100%);padding:3rem 1.5rem 2rem;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.06);border-radius:50%}
+.header::after{content:'';position:absolute;bottom:-20px;left:-20px;width:100px;height:100px;background:rgba(255,255,255,0.04);border-radius:50%}
+.header-logo{font-family:var(--mono);font-size:22px;font-weight:700;color:white;letter-spacing:1px;margin-bottom:4px}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:0.5px}
+.header-wave{position:absolute;bottom:-1px;left:0;right:0;height:24px;background:var(--bg);border-radius:24px 24px 0 0}
+
+/* ── CONTENT ── */
+.content{padding:1.5rem;flex:1}
+
+/* ── LANDING ── */
+.landing-hero{text-align:center;padding:2.5rem 1.5rem 1.5rem}
+.landing-icon{width:80px;height:80px;background:linear-gradient(135deg,var(--green),var(--green-mid));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 1.5rem;box-shadow:0 8px 24px rgba(10,124,92,0.25)}
+.landing-title{font-size:28px;font-weight:800;color:var(--text);margin-bottom:8px;line-height:1.2}
+.landing-title span{color:var(--green)}
+.landing-desc{font-size:14px;color:var(--text-mid);line-height:1.6;margin-bottom:2rem}
+.role-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;text-align:left;width:100%}
+.role-card:active{transform:scale(0.98);border-color:var(--green)}
+.role-card-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.role-card-text{flex:1}
+.role-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px}
+.role-card-sub{font-size:12px;color:var(--text-soft)}
+.role-card-arrow{color:var(--border);font-size:18px}
+
+/* ── FORMS ── */
+.form-section{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.form-title{font-size:18px;font-weight:800;margin-bottom:4px}
+.form-sub{font-size:13px;color:var(--text-soft);margin-bottom:1.5rem;line-height:1.5}
+.lbl{font-size:12px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:var(--font);margin-bottom:14px;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--green);background:var(--card)}
+select.inp{cursor:pointer}
+.inp-group{margin-bottom:4px}
+.section-divider{display:flex;align-items:center;gap:10px;margin:1rem 0;color:var(--text-soft);font-size:12px;font-weight:600}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);letter-spacing:0.3px;transition:all .2s}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--green-mid));color:white;box-shadow:0 4px 16px rgba(10,124,92,0.3)}
+.btn-secondary{background:var(--bg);color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-gold{background:linear-gradient(135deg,#F5A623,#F0C040);color:#7A4500;box-shadow:0 4px 16px rgba(245,166,35,0.3)}
+.btn-sm{padding:10px 16px;font-size:13px;width:auto;border-radius:8px}
+.back-btn{background:none;border:none;color:var(--text-soft);font-size:13px;font-family:var(--font);cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;margin-bottom:1.5rem}
+
+/* ── ALERTS ── */
+.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;line-height:1.5}
+.alert-err{background:var(--red-light);color:var(--red);border-left:3px solid var(--red)}
+.alert-ok{background:var(--green-light);color:var(--green-dark);border-left:3px solid var(--green)}
+.alert-info{background:var(--blue-light);color:var(--blue);border-left:3px solid var(--blue)}
+.alert-warn{background:var(--gold-light);color:#7A4500;border-left:3px solid var(--gold)}
+
+/* ── DASHBOARD ── */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;background:var(--card);border-bottom:1px solid var(--border)}
+.topbar-name{font-size:16px;font-weight:800}
+.topbar-id{font-size:11px;color:var(--text-soft);font-family:var(--mono);margin-top:2px}
+.logout-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text-soft);cursor:pointer;font-family:var(--font);font-weight:600}
+
+/* ── QR CARD ── */
+.qr-card{background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:20px;padding:1.5rem;margin-bottom:1rem;color:white;text-align:center;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(10,124,92,0.3)}
+.qr-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%}
+.qr-card-label{font-size:10px;font-weight:700;letter-spacing:2px;opacity:0.8;margin-bottom:12px;text-transform:uppercase}
+.qr-box{background:white;border-radius:12px;padding:10px;display:inline-block;margin-bottom:12px}
+.qr-id{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:4px;margin-bottom:4px}
+.qr-name{font-size:13px;opacity:0.85;margin-bottom:10px}
+.qr-hint{font-size:11px;opacity:0.65;margin-top:6px}
+
+/* ── WAIT CARD ── */
+.wait-card{background:var(--gold-light);border:1.5px solid #FFD580;border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;text-align:center}
+.wait-icon{font-size:36px;margin-bottom:10px}
+.wait-title{font-size:16px;font-weight:700;color:#7A4500;margin-bottom:6px}
+.wait-desc{font-size:13px;color:#8A5500;line-height:1.5}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:0.3px}
+.chip-ok{background:#D4EDDA;color:#155724}
+.chip-pending{background:var(--gold-light);color:#7A4500}
+.chip-ko{background:var(--red-light);color:var(--red)}
+.chip-auto{background:#EDE9FE;color:#4527A0}
+.chip-info{background:var(--blue-light);color:#0D47A1}
+
+/* ── DOSSIER CARDS ── */
+.dossier-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;box-shadow:var(--shadow)}
+.dossier-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.dossier-hopital{font-size:14px;font-weight:700}
+.dossier-date{font-size:11px;color:var(--text-soft);margin-bottom:6px}
+.dossier-actes{font-size:12px;color:var(--text-mid);margin-bottom:8px}
+.dossier-montants{display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)}
+.montant-label{font-size:11px;color:var(--text-soft);margin-bottom:2px}
+.montant-val{font-size:14px;font-weight:700}
+.montant-remb{color:var(--green)}
+
+/* ── MOMO BLOCK ── */
+.momo-block{background:#FFF9E6;border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:1rem;margin-top:10px}
+.momo-label{font-size:12px;color:#7A5000;margin-bottom:8px;font-weight:600}
+.momo-pay-btn{width:100%;padding:11px;background:linear-gradient(135deg,#FFCC00,#FFD740);color:#4A3000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+
+/* ── PLAFOND ── */
+.plafond-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.plafond-bar-bg{background:var(--bg);border-radius:99px;height:10px;overflow:hidden;margin:8px 0}
+.plafond-bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;padding:0 1.5rem;margin-bottom:0;background:var(--card);border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:12px 8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-soft);font-family:var(--font);border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* ── OVERLAY ── */
+#ov{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:14px}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#ov-msg{font-size:14px;color:var(--text-soft);font-weight:500}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:360px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+
+/* ── MOMO MODAL ── */
+#momo-modal{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1001;display:none;align-items:center;justify-content:center;padding:1rem}
+#momo-modal.active{display:flex}
+#momo-box{background:white;width:100%;max-width:380px;border-radius:20px;padding:1.75rem;text-align:center}
+.momo-step{display:none;flex-direction:column;align-items:center;gap:12px}
+.momo-step.active{display:flex}
+.momo-logo{background:#FFCC00;border-radius:14px;padding:12px 24px;font-size:22px;font-weight:800;color:#333;letter-spacing:1px;margin-bottom:4px;font-family:var(--mono)}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* ── PROFIL ── */
+.profil-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.profil-label{color:var(--text-soft);font-size:13px}
+.profil-val{font-weight:600}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;cursor:pointer;border:none;background:none;font-family:var(--font)}
+.nav-icon{font-size:22px}
+.nav-label{font-size:10px;color:var(--text-soft);font-weight:600}
+.nav-item.active .nav-label{color:var(--green)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text-soft)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+.empty-text{font-size:14px;line-height:1.6}
+
+/* ── NOTIFICATION BADGE ── */
+.notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;margin-left:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- OVERLAY -->
+<div id="ov" style="display:none"><div class="spin"></div><div id="ov-msg">Chargement...</div></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════ LANDING ═══════════════ -->
+<div id="s-landing" class="screen active">
+  <div class="landing-hero">
+    <div class="landing-icon">🏥</div>
+    <div class="landing-title">Alafia<span> Care</span></div>
+    <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono);margin-bottom:8px">PATIENT — BÉNIN</div>
+    <div class="landing-desc">Votre santé connectée. Soins garantis, remboursements automatiques.</div>
+  </div>
+  <div style="padding:0 1.5rem 2rem">
+    <button class="role-card" onclick="go('s-entry')">
+      <div class="role-card-icon" style="background:var(--green-light)">➕</div>
+      <div class="role-card-text">
+        <div class="role-card-title">Créer mon compte</div>
+        <div class="role-card-sub">Première inscription sur Alafia Care</div>
+      </div>
+      <div class="role-card-arrow">›</div>
+    </button>
+    <button class="role-card" onclick="go('s-login')">
+      <div class="role-card-icon" style="background:var(--blue-light)">🔑</div>
+      <div class="role-card-text">
+        <div class="role-card-title">Accéder à mon dossier</div>
+        <div class="role-card-sub">J'ai déjà un compte Alafia</div>
+      </div>
+      <div class="role-card-arrow">›</div>
+    </button>
+    <div style="text-align:center;margin-top:1.5rem;font-size:11px;color:var(--text-soft);font-family:var(--mono)">MVP v1.0 — Parakou, Bénin</div>
+  </div>
+</div>
+
+<!-- ═══════════════ INSCRIPTION ═══════════════ -->
+<div id="s-entry" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="go('s-landing')" style="color:rgba(255,255,255,0.8);margin-bottom:1rem">← Retour</button>
+    <div class="header-logo">Créer mon compte</div>
+    <div class="header-sub">Alafia Care — Inscription Patient</div>
+    <div class="header-wave"></div>
+  </div>
+  <div class="content">
+    <div class="alert alert-info" style="margin-bottom:1.5rem">
+      ℹ️ Après inscription, votre compagnie d'assurance validera votre compte. Votre QR code sera généré dès validation.
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">Informations personnelles</div>
+      <div class="form-sub">Champs obligatoires marqués *</div>
+      <label class="lbl">Nom *</label>
+      <input class="inp" id="reg-nom" placeholder="Ex: AHOUNOU"/>
+      <label class="lbl">Prénom *</label>
+      <input class="inp" id="reg-prenom" placeholder="Ex: Chantal"/>
+      <label class="lbl">Téléphone *</label>
+      <input class="inp" id="reg-tel" type="tel" placeholder="+229 97 00 00 00"/>
+      <label class="lbl">Date de naissance</label>
+      <input class="inp" id="reg-ddn" type="date"/>
+      <label class="lbl">NPI <span style="color:var(--text-soft);font-size:11px;text-transform:none">(Numéro Personnel d'Identification)</span></label>
+      <input class="inp" id="reg-npi" placeholder="Ex: 1234567890"/>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">Assurance</div>
+      <div class="form-sub">Votre couverture maladie</div>
+      <label class="lbl">Compagnie d'assurance</label>
+      <input class="inp" id="reg-compagnie" placeholder="Ex: SOBAC, NSIA, COLINA, AMO..."/>
+      <label class="lbl">Numéro de police</label>
+      <input class="inp" id="reg-police" placeholder="Ex: POL-2026-XXXX"/>
+      <label class="lbl">Numéro MoMo MTN</label>
+      <input class="inp" id="reg-momo" type="tel" placeholder="Ex: +229 96 00 00 00"/>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">🩺 Informations médicales</div>
+      <div class="form-sub">Utiles en cas d'urgence — partagées avec les soignants avec votre consentement</div>
+      <label class="lbl">Groupe sanguin</label>
+      <select class="inp" id="reg-groupe">
+        <option value="">Non renseigné</option>
+        <option>A+</option><option>A-</option>
+        <option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option>
+        <option>O+</option><option>O-</option>
+      </select>
+      <label class="lbl">Allergies connues</label>
+      <input class="inp" id="reg-allergies" placeholder="Ex: Pénicilline, arachides…"/>
+      <label class="lbl">Antécédents médicaux</label>
+      <input class="inp" id="reg-antecedents" placeholder="Ex: Diabète, hypertension…"/>
+    </div>
+
+    <div id="reg-err" class="alert alert-err" style="display:none"></div>
+    <button class="btn btn-primary" onclick="doRegister()">Soumettre ma demande →</button>
+    <div style="height:2rem"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ CONNEXION ═══════════════ -->
+<div id="s-login" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="go('s-landing')" style="color:rgba(255,255,255,0.8);margin-bottom:1rem">← Retour</button>
+    <div class="header-logo">Mon dossier</div>
+    <div class="header-sub">Connexion à votre espace patient</div>
+    <div class="header-wave"></div>
+  </div>
+  <div class="content">
+    <div class="form-section">
+      <div class="form-title">Accéder à mon compte</div>
+      <div class="form-sub">Entrez votre numéro de téléphone ou votre identifiant Alafia (AL-XXXX)</div>
+      <label class="lbl">Téléphone ou identifiant Alafia</label>
+      <input class="inp" id="login-q" placeholder="+229 97... ou AL-ABC123" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <div id="login-err" class="alert alert-err" style="display:none"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Accéder à mon dossier →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="s-dash" class="screen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-name" id="dash-name"></div>
+      <div class="topbar-id" id="dash-id"></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" id="tab-qr" onclick="switchTab('qr')">🪪 Carte</button>
+    <button class="tab" id="tab-dos" onclick="switchTab('dos')">📋 Dossiers</button>
+    <button class="tab" id="tab-profil" onclick="switchTab('profil')">👤 Profil</button>
+  </div>
+
+  <!-- TAB : QR / CARTE -->
+  <div id="pane-qr" style="flex:1;overflow-y:auto;padding:1.5rem">
+    <div id="qr-zone"></div>
+  </div>
+
+  <!-- TAB : DOSSIERS -->
+  <div id="pane-dos" style="display:none;flex:1;overflow-y:auto;padding:1.5rem">
+    <div class="section-title">📋 Mes dossiers médicaux</div>
+    <div id="dos-list"></div>
+  </div>
+
+  <!-- TAB : PROFIL -->
+  <div id="pane-profil" style="display:none;flex:1;overflow-y:auto;padding:1.5rem">
+    <div class="section-title">👤 Mon profil</div>
+    <div id="profil-content"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MOMO MODAL ═══════════════ -->
+<div id="momo-modal">
+  <div id="momo-box">
+    <div class="momo-logo">MTN MoMo</div>
+    <!-- Étape 1 : Confirmation -->
+    <div class="momo-step active" id="momo-s1">
+      <div style="font-size:15px;font-weight:700;margin-top:4px">Paiement MTN MoMo</div>
+      <div style="font-size:13px;color:var(--text-soft);line-height:1.5;text-align:center">Vous allez payer votre reste à charge :</div>
+      <div style="background:var(--gold-light);border-radius:12px;padding:1rem 1.5rem;text-align:center;width:100%">
+        <div style="font-size:28px;font-weight:800;color:var(--text)" id="momo-amount"></div>
+        <div style="font-size:12px;color:var(--text-soft)">FCFA</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-mid);text-align:center">Numéro MoMo : <strong id="momo-num"></strong></div>
+      <button class="btn btn-gold" style="margin-top:6px" onclick="momoStep(2)">Confirmer le paiement</button>
+      <button class="btn btn-secondary" onclick="closeMomo()">Annuler</button>
+    </div>
+    <!-- Étape 2 : Traitement -->
+    <div class="momo-step" id="momo-s2">
+      <div class="spin" style="border-top-color:var(--gold)"></div>
+      <div style="font-size:14px;font-weight:600">Traitement en cours...</div>
+      <div style="font-size:12px;color:var(--text-soft);text-align:center">Vérifiez votre téléphone MTN pour confirmer le paiement</div>
+    </div>
+    <!-- Étape 3 : Succès -->
+    <div class="momo-step" id="momo-s3">
+      <div style="font-size:48px">✅</div>
+      <div style="font-size:16px;font-weight:700;color:var(--green)">Paiement confirmé !</div>
+      <div style="font-size:13px;color:var(--text-soft);text-align:center">Votre reste à charge a bien été payé. Le dossier est clôturé.</div>
+      <button class="btn btn-primary" style="margin-top:6px" onclick="closeMomo()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const db=getFirestore(initializeApp({
+  apiKey:"AIzaSyAT5wcCQJ1dqzJZ1y6WAwXdGd10QX9oM5Y",
+  authDomain:"alafia-care.firebaseapp.com",
+  projectId:"alafia-care",
+  storageBucket:"alafia-care.firebasestorage.app",
+  messagingSenderId:"471278126514",
+  appId:"1:471278126514:web:ab6fa509704436c0af90ab"
+}));
+
+// ── STATE ──
+let currentUser=null;
+let currentDossiers=[];
+let momoDocId=null;
+let unsubDossiers=null;
+
+// ── HELPERS ──
+const $=id=>document.getElementById(id);
+const fmt=n=>n?n.toLocaleString("fr-FR"):"0";
+const fdate=ts=>{
+  if(!ts)return"";
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
+};
+const showOv=msg=>{$("ov").style.display="flex";$("ov-msg").textContent=msg||"Chargement..."};
+const hideOv=()=>$("ov").style.display="none";
+const showToast=(msg,color="#1A1A2E")=>{
+  const t=$("toast");t.textContent=msg;t.style.background=color;t.style.opacity="1";
+  setTimeout(()=>t.style.opacity="0",3000);
+};
+const genId=()=>"AL-"+Math.random().toString(36).substr(2,6).toUpperCase();
+
+// ── NAVIGATION ──
+window.go=id=>{
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0,0);
+};
+
+window.logout=()=>{
+  currentUser=null;
+  if(unsubDossiers){unsubDossiers();unsubDossiers=null;}
+  go("s-landing");
+};
+
+// ── TABS DASHBOARD ──
+window.switchTab=tab=>{
+  ["qr","dos","profil"].forEach(t=>{
+    $("pane-"+t).style.display=t===tab?"block":"none";
+    $("tab-"+t).classList.toggle("active",t===tab);
+  });
+  if(tab==="dos")renderDossiers();
+  if(tab==="profil")renderProfil();
+};
+
+// ── QR CODE ──
+function makeQR(containerId,text){
+  const el=$(containerId);
+  if(!el)return;
+  el.innerHTML="";
+  new QRCode(el,{text,width:160,height:160,colorDark:"#065C42",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+}
+
+// ── FIRESTORE ──
+async function getPts(){
+  const snap=await getDocs(collection(db,"patients"));
+  return snap.docs.map(d=>({...d.data(),_id:d.id}));
+}
+async function getDos(patientId){
+  const snap=await getDocs(query(collection(db,"dossiers"),where("patientId","==",patientId)));
+  return snap.docs.map(d=>({...d.data(),_id:d.id}));
+}
+
+// ── INSCRIPTION ──
+window.doRegister=async()=>{
+  const nom=$("reg-nom").value.trim(),prenom=$("reg-prenom").value.trim(),tel=$("reg-tel").value.trim();
+  $("reg-err").style.display="none";
+  if(!nom||!prenom||!tel){
+    $("reg-err").textContent="Remplissez les champs obligatoires (Nom, Prénom, Téléphone).";
+    $("reg-err").style.display="block";return;
+  }
+  showOv("Vérification...");
+  const pts=await getPts();
+  if(pts.find(p=>p.tel===tel)){
+    hideOv();
+    $("reg-err").textContent="Ce numéro de téléphone est déjà enregistré.";
+    $("reg-err").style.display="block";return;
+  }
+  const pt={
+    tempId:"TEMP-"+Date.now(),
+    nom,prenom,tel,
+    ddn:$("reg-ddn").value||null,
+    npi:$("reg-npi").value.trim()||null,
+    compagnie:$("reg-compagnie").value.trim()||null,
+    police:$("reg-police").value.trim()||null,
+    momo:$("reg-momo").value.trim()||null,
+    groupeSanguin:$("reg-groupe").value||null,
+    allergies:$("reg-allergies").value.trim()||null,
+    antecedents:$("reg-antecedents").value.trim()||null,
+    statut:"en_attente",
+    assuranceValide:false,
+    assuranceType:null,
+    assuranceTaux:null,
+    assurancePlafond:null,
+    alafiaId:null,
+    createdAt:new Date()
+  };
+  showOv("Envoi de la demande...");
+  const ref=await addDoc(collection(db,"patients"),pt);
+  currentUser={...pt,_id:ref.id};
+  hideOv();
+  showToast("✅ Demande envoyée avec succès !","#0A7C5C");
+  renderDash();
+  go("s-dash");
+};
+
+// ── CONNEXION ──
+window.doLogin=async()=>{
+  const q=$("login-q").value.trim();
+  $("login-err").style.display="none";
+  if(!q){$("login-err").textContent="Entrez votre téléphone ou identifiant.";$("login-err").style.display="block";return;}
+  showOv("Recherche du compte...");
+  const pts=await getPts();
+  const p=pts.find(x=>x.tel===q||(x.alafiaId&&x.alafiaId===q.toUpperCase())||x.tempId===q);
+  if(p){
+    currentUser=p;
+    hideOv();
+    renderDash();
+    go("s-dash");
+    // Listener temps réel sur les dossiers
+    if(p.alafiaId&&!unsubDossiers){
+      unsubDossiers=onSnapshot(query(collection(db,"dossiers"),where("patientId","==",p.alafiaId)),snap=>{
+        currentDossiers=snap.docs.map(d=>({...d.data(),_id:d.id}));
+        const updated=snap.docChanges().filter(c=>c.type==="modified"&&(c.doc.data().statut==="validé"||c.doc.data().statut==="rejeté"));
+        if(updated.length>0) showToast("🔔 Un de vos dossiers a été mis à jour !","#0A7C5C");
+      });
+    }
+  }else{
+    hideOv();
+    $("login-err").textContent="Aucun compte trouvé. Vérifiez votre numéro.";
+    $("login-err").style.display="block";
+  }
+};
+
+// ── DASHBOARD PRINCIPAL ──
+function renderDash(){
+  const u=currentUser;
+  $("dash-name").textContent=u.prenom+" "+u.nom;
+  $("dash-id").textContent=u.alafiaId?"ID : "+u.alafiaId:"Tél : "+u.tel;
+  switchTab("qr");
+  renderQR();
+}
+
+// ── ONGLET QR / CARTE ──
+function renderQR(){
+  const u=currentUser;
+  const zone=$("qr-zone");
+
+  if(u.statut==="en_attente"||!u.alafiaId){
+    zone.innerHTML=`
+      <div class="wait-card">
+        <div class="wait-icon">⏳</div>
+        <div class="wait-title">Compte en attente de validation</div>
+        <div class="wait-desc">Votre demande a été transmise à votre compagnie d'assurance. Votre QR code sera généré dès validation.</div>
+        ${u.compagnie?`<div style="margin-top:12px;font-size:12px;color:#8A5500">Assurance déclarée : <strong>${u.compagnie}</strong></div>`:""}
+        ${u.police?`<div style="font-size:12px;color:#8A5500;margin-top:4px">N° police : <strong>${u.police}</strong></div>`:""}
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #FFD580;font-size:11px;color:#8A5500">
+          Pour vous reconnecter, utilisez votre téléphone : <strong>${u.tel}</strong>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(u.statut==="rejete"){
+    zone.innerHTML=`
+      <div style="background:var(--red-light);border:1.5px solid #F5C6CB;border-radius:var(--radius);padding:1.5rem;text-align:center">
+        <div style="font-size:36px;margin-bottom:10px">❌</div>
+        <div style="font-weight:700;color:var(--red);font-size:16px;margin-bottom:6px">Demande rejetée</div>
+        <div style="font-size:13px;color:var(--red);line-height:1.5">Contactez votre compagnie d'assurance pour plus d'informations.</div>
+      </div>`;
+    return;
+  }
+
+  // Compte validé
+  const annee=new Date().getFullYear();
+  const consomme=currentDossiers.filter(d=>d.statut==="validé"&&d.remboursement&&(d.createdAt?.toDate?d.createdAt.toDate():new Date(d.createdAt||0)).getFullYear()===annee).reduce((s,d)=>s+(d.remboursement||0),0);
+  const plafond=u.assurancePlafond||0;
+  const pct=plafond>0?Math.min(Math.round(consomme/plafond*100),100):0;
+  const reste=Math.max(plafond-consomme,0);
+  const barColor=pct>=90?"var(--red)":pct>=70?"var(--gold)":"var(--green)";
+
+  zone.innerHTML=`
+    <div class="qr-card">
+      <div class="qr-card-label">Carte Alafia Care — Patient</div>
+      <div class="qr-box" id="qr-render"></div>
+      <div class="qr-id">${u.alafiaId}</div>
+      <div class="qr-name">${u.prenom} ${u.nom}</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:6px">
+        ${u.assuranceValide?`<span class="chip chip-auto">⚡ ${u.assuranceType}</span><span class="chip chip-ok">${u.assuranceTaux}% couvert</span>`:'<span class="chip chip-ok">✓ Compte actif</span>'}
+      </div>
+      <div class="qr-hint">Présentez ce QR code à l'agent hospitalier</div>
+    </div>
+
+    ${u.assuranceValide&&plafond>0?`
+    <div class="plafond-card">
+      <div class="section-title">📊 Plafond annuel</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-soft);margin-bottom:4px">
+        <span>Utilisé</span><strong style="color:${barColor}">${pct}%</strong>
+      </div>
+      <div class="plafond-bar-bg">
+        <div class="plafond-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
+        <span><strong>${fmt(consomme)}</strong> FCFA utilisés</span>
+        <span style="color:var(--green)"><strong>${fmt(reste)}</strong> FCFA restants</span>
+      </div>
+      ${pct>=90?`<div class="alert alert-err" style="margin-top:10px;margin-bottom:0">🚨 Plafond presque atteint ! Contactez votre assurance.</div>`:pct>=70?`<div class="alert alert-warn" style="margin-top:10px;margin-bottom:0">⚠️ Vous avez consommé ${pct}% de votre plafond.</div>`:""}
+    </div>`:""}
+  `;
+  makeQR("qr-render",u.alafiaId);
+}
+
+// ── ONGLET DOSSIERS ──
+async function renderDossiers(){
+  if(!currentUser?.alafiaId){
+    $("dos-list").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucun dossier.<br>Votre QR code n\'est pas encore actif.</div></div>';
+    return;
+  }
+  showOv("Chargement...");
+  const dos=await getDos(currentUser.alafiaId);
+  currentDossiers=dos;
+  hideOv();
+  if(dos.length===0){
+    $("dos-list").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucun dossier médical pour le moment.</div></div>';
+    return;
+  }
+  $("dos-list").innerHTML=dos.map(d=>{
+    const resteACharge=d.montant&&d.remboursement!=null?d.montant-d.remboursement:null;
+    const momoBlock=resteACharge>0&&d.statut==="validé"&&!d.paye?
+      `<div class="momo-block">
+        <div class="momo-label">Reste à votre charge : <strong>${fmt(resteACharge)} FCFA</strong></div>
+        ${currentUser.momo
+          ?`<button class="momo-pay-btn" onclick="openMomo('${d._id}',${resteACharge},'${currentUser.momo}')">📱 Payer via MTN MoMo</button>`
+          :`<div style="font-size:12px;color:#7A5000">Ajoutez votre numéro MoMo dans votre profil pour payer en ligne.</div>`}
+      </div>`:
+      d.paye?`<div class="alert alert-ok" style="margin-top:10px;margin-bottom:0">✅ Reste à charge payé via MoMo</div>`:"";
+    return `
+      <div class="dossier-card">
+        <div class="dossier-header">
+          <div class="dossier-hopital">${d.hopital||"Hôpital"}</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            ${d.autoValidated?'<span class="chip chip-auto">⚡</span>':""}
+            <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
+          </div>
+        </div>
+        <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
+        <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
+        <div class="dossier-montants">
+          <div>
+            <div class="montant-label">Montant total</div>
+            <div class="montant-val">${fmt(d.montant)} FCFA</div>
+          </div>
+          ${d.remboursement!=null?`
+          <div style="text-align:right">
+            <div class="montant-label">Remboursé</div>
+            <div class="montant-val montant-remb">+${fmt(d.remboursement)} FCFA</div>
+          </div>`:""}
+        </div>
+        ${momoBlock}
+      </div>`;
+  }).join("");
+}
+
+// ── ONGLET PROFIL ──
+function renderProfil(){
+  const u=currentUser;
+  $("profil-content").innerHTML=`
+    <div class="form-section">
+      <div class="form-title">Identité</div>
+      <div class="profil-row"><span class="profil-label">Nom complet</span><span class="profil-val">${u.prenom} ${u.nom}</span></div>
+      <div class="profil-row"><span class="profil-label">Téléphone</span><span class="profil-val">${u.tel}</span></div>
+      ${u.alafiaId?`<div class="profil-row"><span class="profil-label">Identifiant Alafia</span><span class="profil-val" style="font-family:var(--mono);color:var(--green)">${u.alafiaId}</span></div>`:""}
+      ${u.ddn?`<div class="profil-row"><span class="profil-label">Date de naissance</span><span class="profil-val">${u.ddn}</span></div>`:""}
+      ${u.npi?`<div class="profil-row"><span class="profil-label">NPI</span><span class="profil-val">${u.npi}</span></div>`:""}
+    </div>
+    <div class="form-section">
+      <div class="form-title">Assurance</div>
+      <div class="profil-row"><span class="profil-label">Compagnie</span><span class="profil-val">${u.compagnie||"—"}</span></div>
+      <div class="profil-row"><span class="profil-label">N° de police</span><span class="profil-val">${u.police||"—"}</span></div>
+      <div class="profil-row"><span class="profil-label">Statut</span><span class="chip chip-${u.statut==="validé"||u.assuranceValide?"ok":"pending"}">${u.assuranceValide?"✓ Validée":"En attente"}</span></div>
+      ${u.assuranceTaux?`<div class="profil-row"><span class="profil-label">Taux de couverture</span><span class="profil-val" style="color:var(--green)">${u.assuranceTaux}%</span></div>`:""}
+      ${u.assurancePlafond?`<div class="profil-row"><span class="profil-label">Plafond annuel</span><span class="profil-val">${fmt(u.assurancePlafond)} FCFA</span></div>`:""}
+    </div>
+    <div class="form-section">
+      <div class="form-title">💳 Mobile Money</div>
+      <div class="profil-row"><span class="profil-label">Numéro MoMo MTN</span><span class="profil-val">${u.momo||"Non renseigné"}</span></div>
+    </div>
+    <div class="form-section">
+      <div class="form-title">🩺 Informations médicales</div>
+      <div class="profil-row"><span class="profil-label">Groupe sanguin</span><span class="profil-val">${u.groupeSanguin||"—"}</span></div>
+      <div class="profil-row"><span class="profil-label">Allergies</span><span class="profil-val">${u.allergies||"—"}</span></div>
+      <div class="profil-row" style="border:none"><span class="profil-label">Antécédents</span><span class="profil-val">${u.antecedents||"—"}</span></div>
+    </div>
+  `;
+}
+
+// ── MOMO PAIEMENT ──
+window.openMomo=(docId,montant,num)=>{
+  momoDocId=docId;
+  $("momo-amount").textContent=fmt(montant);
+  $("momo-num").textContent=num;
+  ["momo-s1","momo-s2","momo-s3"].forEach(s=>$("momo-"+s.split("-")[1]).classList.remove("active"));
+  $("momo-s1").classList.add("active");
+  $("momo-modal").classList.add("active");
+};
+
+window.momoStep=async(step)=>{
+  ["momo-s1","momo-s2","momo-s3"].forEach((s,i)=>{
+    $(s).classList.toggle("active",i+1===step);
+  });
+  if(step===2){
+    // Simulation traitement 2.5s
+    setTimeout(async()=>{
+      if(momoDocId){
+        await updateDoc(doc(db,"dossiers",momoDocId),{paye:true,payeAt:new Date()});
+        momoStep(3);
+        showToast("✅ Paiement MoMo confirmé !","#0A7C5C");
+        renderDossiers();
+      }
+    },2500);
+  }
+};
+
+window.closeMomo=()=>{
+  $("momo-modal").classList.remove("active");
+  momoDocId=null;
+};
+
+// ── INIT ──
+(async()=>{
+  // PWA Service Worker
+  if("serviceWorker" in navigator){
+    try{await navigator.serviceWorker.register("sw.js");}catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
