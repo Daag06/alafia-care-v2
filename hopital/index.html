@@ -10,90 +10,106 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <style>
 :root{
-  --blue:#185FA5;
-  --blue-light:#E8F1FB;
-  --blue-mid:#1A73E8;
-  --blue-dark:#0D3F6E;
+  --blue:#1A56DB;
+  --blue-light:#EBF5FF;
+  --blue-dark:#1240A0;
   --green:#0A7C5C;
   --green-light:#E6F5F0;
   --gold:#F5A623;
   --gold-light:#FEF3E2;
   --red:#D63031;
   --red-light:#FFEBEE;
-  --purple:#534AB7;
+  --purple:#6C3FC5;
   --purple-light:#EDE9FE;
   --text:#1A1A2E;
   --text-mid:#4A4A6A;
   --text-soft:#8888A0;
-  --bg:#F0F4FA;
+  --bg:#F0F4FF;
   --card:#FFFFFF;
-  --border:#E0E8F0;
+  --border:#E0E8FF;
   --radius:16px;
   --radius-sm:10px;
-  --shadow:0 2px 16px rgba(24,95,165,0.08);
+  --shadow:0 2px 16px rgba(26,86,219,0.08);
   --font:'Plus Jakarta Sans',sans-serif;
   --mono:'Space Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--text)}
-#app{width:100%;max-width:960px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative}
+#app{width:100%;max-width:900px;margin:0 auto;min-height:100vh}
 
 /* ── SCREENS ── */
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 
-/* ── HEADER ── */
-.header{background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 60%,var(--blue-mid) 100%);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
-.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.06);border-radius:50%}
-.header::after{content:'';position:absolute;bottom:-20px;left:60%;width:100px;height:100px;background:rgba(255,255,255,0.04);border-radius:50%}
-.header-logo{font-family:var(--mono);font-size:20px;font-weight:700;color:white;letter-spacing:1px;margin-bottom:2px}
-.header-sub{font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:0.5px}
-.header-wave{position:absolute;bottom:-1px;left:0;right:0;height:24px;background:var(--bg);border-radius:24px 24px 0 0}
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#0D1B6E 0%,#1A56DB 60%,#3B82F6 100%)}
+.login-card{background:white;border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.login-logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.login-title{font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text-soft);margin-bottom:2rem;line-height:1.5}
+.lbl{font-size:12px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:#FAFBFF;font-family:var(--font);margin-bottom:14px;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--blue);background:white}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:white;box-shadow:0 4px 16px rgba(26,86,219,0.3)}
+.btn-secondary{background:var(--bg);color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-green{background:linear-gradient(135deg,var(--green),#1D9E75);color:white;box-shadow:0 4px 16px rgba(10,124,92,0.25)}
+.btn-sm{padding:9px 16px;font-size:13px;width:auto;border-radius:8px}
 
 /* ── TOPBAR ── */
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow)}
-.topbar-name{font-size:17px;font-weight:800;color:var(--text)}
-.topbar-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
-.logout-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--text-soft);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .2s}
-.logout-btn:hover{border-color:var(--red);color:var(--red)}
-
-/* ── CONTENT ── */
-.content{padding:1.5rem 2rem;flex:1}
-@media(max-width:600px){
-  .content{padding:1rem}
-  .topbar{padding:.875rem 1rem}
-}
+.topbar{background:white;border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-icon{width:40px;height:40px;background:var(--blue-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.topbar-name{font-size:16px;font-weight:800;color:var(--text)}
+.topbar-hopital{font-size:12px;color:var(--text-soft);font-family:var(--mono)}
+.logout-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--text-soft);cursor:pointer;font-family:var(--font);font-weight:600}
 
 /* ── TABS ── */
-.tabs{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--border)}
-.tab-btn{flex:1;padding:14px 10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-soft);font-family:var(--font);border-bottom:2px solid transparent;transition:all .2s}
-.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
-.tab-btn-wrap{position:relative;flex:1;display:flex}
-.tab-btn-wrap .tab-btn{flex:1}
-.notif-dot{position:absolute;top:8px;right:12px;width:8px;height:8px;background:var(--red);border-radius:50%;display:none}
+.tabs{display:flex;background:white;border-bottom:1px solid var(--border);padding:0 1.5rem}
+.tab{padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-soft);font-family:var(--font);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:white;font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;margin-left:6px;vertical-align:middle}
 
-/* ── FORMS ── */
-.form-card{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow);border:1px solid var(--border)}
-.form-title{font-size:17px;font-weight:800;margin-bottom:4px}
-.form-sub{font-size:13px;color:var(--text-soft);margin-bottom:1.5rem;line-height:1.5}
-.lbl{font-size:11px;font-weight:700;color:var(--text-mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:var(--font);outline:none;transition:border-color .2s}
-.inp:focus{border-color:var(--blue);background:var(--card)}
-.inp-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:14px}
-.inp-row .inp{margin-bottom:0}
+/* ── CONTENT ── */
+.content{padding:1.5rem;flex:1}
+.content-wide{padding:1.5rem;flex:1;max-width:800px;margin:0 auto;width:100%}
 
-/* ── BUTTONS ── */
-.btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);letter-spacing:0.3px;transition:all .2s;margin-top:4px}
-.btn:active{transform:scale(0.98)}
-.btn-primary{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:white;box-shadow:0 4px 16px rgba(24,95,165,0.3)}
-.btn-green{background:linear-gradient(135deg,var(--green),#1D9E75);color:white;box-shadow:0 4px 16px rgba(10,124,92,0.3)}
-.btn-secondary{background:var(--bg);color:var(--text-mid);border:1.5px solid var(--border)}
-.btn-danger{background:var(--red-light);color:var(--red);border:1.5px solid #F5C6CB}
-.btn-sm{padding:9px 16px;font-size:13px;width:auto;border-radius:8px;margin-top:0}
-.btn-icon{display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-row{display:flex;gap:8px;margin-top:8px}
-.btn-row .btn{flex:1}
-.back-btn{background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;font-family:var(--font);cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;margin-bottom:1rem}
+/* ── CARDS ── */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--text-soft);margin-bottom:1rem}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;box-shadow:var(--shadow)}
+.stat-num{font-size:28px;font-weight:800;font-family:var(--mono)}
+.stat-label{font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+
+/* ── PATIENT CARD ── */
+.patient-found{border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem}
+.patient-found-auto{background:var(--purple-light);border:1.5px solid #C4B5FD}
+.patient-found-std{background:var(--green-light);border:1.5px solid #9FE1CB}
+.patient-badge{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.patient-name{font-size:17px;font-weight:800;margin-bottom:4px}
+.patient-info{font-size:12px;color:var(--text-mid);margin-bottom:10px}
+.chips-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.med-info{background:rgba(255,255,255,0.6);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.8;margin-top:8px}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px}
+.chip-ok{background:#D4EDDA;color:#155724}
+.chip-pending{background:var(--gold-light);color:#7A4500}
+.chip-ko{background:var(--red-light);color:var(--red)}
+.chip-auto{background:var(--purple-light);color:#4527A0}
+.chip-info{background:var(--blue-light);color:#0D47A1}
+
+/* ── ACTES ── */
+.actes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.acte-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
+.acte-item:hover{border-color:var(--blue)}
+.acte-item.selected{background:var(--blue-light);border-color:var(--blue);color:var(--blue);font-weight:700}
+.acte-item input{accent-color:var(--blue);width:16px;height:16px;flex-shrink:0}
 
 /* ── ALERTS ── */
 .alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;line-height:1.5}
@@ -101,319 +117,216 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .alert-ok{background:var(--green-light);color:var(--green);border-left:3px solid var(--green)}
 .alert-info{background:var(--blue-light);color:var(--blue);border-left:3px solid var(--blue)}
 .alert-warn{background:var(--gold-light);color:#7A4500;border-left:3px solid var(--gold)}
-.alert-purple{background:var(--purple-light);color:var(--purple);border-left:3px solid var(--purple)}
+.alert-auto{background:var(--purple-light);color:var(--purple);border-left:3px solid var(--purple)}
 
-/* ── PATIENT CARD ── */
-.patient-card{border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;border:1.5px solid}
-.patient-card-blue{background:var(--blue-light);border-color:#90C4F5}
-.patient-card-purple{background:var(--purple-light);border-color:#C4B5FD}
-.patient-card-green{background:var(--green-light);border-color:#9FE1CB}
-.patient-card-header{font-size:10px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px;opacity:0.7;text-transform:uppercase}
-.patient-name{font-size:17px;font-weight:800;margin-bottom:2px}
-.patient-meta{font-size:12px;color:var(--text-mid);margin-bottom:10px}
-.chips-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:0.3px}
-.chip-ok{background:#D4EDDA;color:#155724}
-.chip-pending{background:var(--gold-light);color:#7A4500}
-.chip-ko{background:var(--red-light);color:var(--red)}
-.chip-auto{background:var(--purple-light);color:var(--purple)}
-.chip-info{background:var(--blue-light);color:var(--blue-dark)}
-.med-info{background:rgba(255,255,255,0.6);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;line-height:2}
-.auto-badge{font-size:11px;font-weight:600;margin-top:8px;opacity:0.8}
-
-/* ── ACTES ── */
-.actes-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
-.acte-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg);transition:all .2s;font-size:13px;font-weight:500}
-.acte-item:hover{border-color:var(--blue)}
-.acte-item.selected{background:var(--blue-light);border-color:var(--blue);color:var(--blue-dark);font-weight:700}
-.acte-item input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px;flex-shrink:0;cursor:pointer}
-@media(max-width:480px){.actes-grid{grid-template-columns:1fr}}
-
-/* ── AUTO INFO ── */
-.auto-info{border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;margin-bottom:12px}
-
-/* ── DOSSIER CARDS ── */
-.dossier-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;box-shadow:var(--shadow)}
-.dossier-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+/* ── DOSSIER HIST ── */
+.dossier-row{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;box-shadow:var(--shadow)}
+.dossier-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
 .dossier-patient{font-size:15px;font-weight:700}
-.dossier-date{font-size:11px;color:var(--text-soft);margin-bottom:6px}
+.dossier-date{font-size:11px;color:var(--text-soft);margin-bottom:4px}
 .dossier-actes{font-size:12px;color:var(--text-mid);margin-bottom:8px}
-.dossier-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border)}
-.montant-val{font-size:14px;font-weight:700}
-.remb-val{font-size:13px;font-weight:700;color:var(--green)}
+.dossier-montants{display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border)}
+.m-label{font-size:11px;color:var(--text-soft);margin-bottom:2px}
+.m-val{font-size:14px;font-weight:700}
+.m-remb{color:var(--green)}
 
-/* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
-.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center;box-shadow:var(--shadow)}
-.stat-num{font-size:28px;font-weight:800;margin-bottom:4px}
-.stat-lbl{font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+/* ── SCANNER ── */
+#scanner-modal{position:fixed;inset:0;background:rgba(0,0,0,0.94);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:1rem}
+#scanner-modal.active{display:flex}
+.scanner-frame{position:relative;width:260px;height:260px}
+.scanner-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:16px}
+#scanner-canvas{display:none}
+.sc-corner{position:absolute;width:28px;height:28px;border-color:#1A56DB;border-style:solid}
+.sc-tl{top:6px;left:6px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.sc-tr{top:6px;right:6px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.sc-bl{bottom:6px;left:6px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.sc-br{bottom:6px;right:6px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.sc-line{position:absolute;left:16px;right:16px;height:2px;background:linear-gradient(90deg,transparent,#1A56DB,transparent);animation:scan 2s linear infinite}
+@keyframes scan{0%{top:16px}100%{top:244px}}
+
+/* ── 2FA ── */
+#twofa-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1002;display:none;align-items:center;justify-content:center;padding:1rem}
+#twofa-modal.active{display:flex}
+#twofa-box{background:white;width:100%;max-width:360px;border-radius:20px;padding:2rem;text-align:center}
+.otp-input{letter-spacing:10px;font-size:24px;font-weight:700;text-align:center;width:180px;margin:0 auto 14px;border:2px solid var(--blue);border-radius:10px;padding:12px;font-family:var(--mono)}
+
+/* ── OVERLAY ── */
+#ov{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:14px}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:400px;text-align:center}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:3rem 1rem;color:var(--text-soft)}
-.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
-.empty-text{font-size:14px;line-height:1.6}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.4}
 
-/* ── OVERLAY ── */
-#ov{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:14px}
-.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-#ov-msg{font-size:14px;color:var(--text-soft);font-weight:500}
+/* ── BACK BTN ── */
+.back-btn{background:none;border:none;color:var(--text-soft);font-size:13px;font-family:var(--font);cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;margin-bottom:1.5rem;font-weight:600}
 
-/* ── TOAST ── */
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
-
-/* ── SCANNER MODAL ── */
-#scanner-modal{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:1rem}
-#scanner-modal.active{display:flex}
-.scanner-frame{position:relative;width:280px;height:280px}
-.scanner-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:12px}
-.scanner-frame canvas{display:none}
-.sc-corner{position:absolute;width:24px;height:24px;border-color:var(--blue-mid);border-style:solid}
-.sc-tl{top:8px;left:8px;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
-.sc-tr{top:8px;right:8px;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
-.sc-bl{bottom:8px;left:8px;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
-.sc-br{bottom:8px;right:8px;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
-.sc-line{position:absolute;left:20px;right:20px;height:2px;background:linear-gradient(90deg,transparent,var(--blue-mid),transparent);animation:scan 2s linear infinite}
-@keyframes scan{0%{top:20px}100%{top:260px}}
-
-/* ── CONSENT MODAL ── */
-#consent-modal{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:flex-end;justify-content:center}
-#consent-modal.active{display:flex}
-#consent-box{background:white;width:100%;max-width:600px;border-radius:var(--radius) var(--radius) 0 0;padding:1.75rem 1.5rem;max-height:90vh;overflow-y:auto}
-
-/* ── SURVEY MODAL ── */
-#survey-modal{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1001;display:none;align-items:flex-end;justify-content:center}
-#survey-modal.active{display:flex}
-#survey-box{background:white;width:100%;max-width:600px;border-radius:var(--radius) var(--radius) 0 0;padding:1.75rem 1.5rem}
-.star-row{display:flex;gap:8px;margin:10px 0}
-.star-btn{font-size:28px;cursor:pointer;opacity:0.25;transition:opacity .15s}
-.star-btn.lit{opacity:1}
-
-/* ── 2FA MODAL ── */
-#twofa-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1002;display:none;align-items:center;justify-content:center;padding:1rem}
-#twofa-modal.active{display:flex}
-#twofa-box{background:white;width:100%;max-width:380px;border-radius:20px;padding:2rem;text-align:center}
-.otp-input{letter-spacing:8px;font-size:24px;font-weight:700;text-align:center;width:180px;margin:0 auto 14px;border:2px solid var(--blue);border-radius:10px;padding:12px;font-family:var(--mono);background:var(--bg);outline:none}
-
-/* ── DELAY COLORS ── */
-.delay-ok{color:var(--green);font-weight:700}
-.delay-warn{color:var(--gold);font-weight:700}
-.delay-ko{color:var(--red);font-weight:700}
+@media(min-width:600px){
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+  .actes-grid{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
 <div id="app">
 
 <!-- OVERLAY -->
-<div id="ov"><div class="spin"></div><div id="ov-msg">Chargement...</div></div>
+<div id="ov" style="display:none"><div class="spin"></div><div id="ov-msg">Chargement...</div></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══ SCANNER MODAL ═══ -->
+<!-- ═══════════════ SCANNER QR ═══════════════ -->
 <div id="scanner-modal">
   <div style="color:white;font-size:15px;font-weight:700;text-align:center">Pointez vers le QR code du patient</div>
   <div class="scanner-frame">
-    <video id="scan-video" playsinline autoplay muted></video>
-    <canvas id="scan-canvas"></canvas>
-    <div class="sc-corner sc-tl"></div><div class="sc-corner sc-tr"></div>
-    <div class="sc-corner sc-bl"></div><div class="sc-corner sc-br"></div>
+    <video id="scanner-video" playsinline autoplay muted></video>
+    <div class="sc-corner sc-tl"></div>
+    <div class="sc-corner sc-tr"></div>
+    <div class="sc-corner sc-bl"></div>
+    <div class="sc-corner sc-br"></div>
     <div class="sc-line"></div>
   </div>
-  <div style="font-size:12px;color:rgba(255,255,255,0.6)">Détection automatique en cours...</div>
-  <button onclick="stopScanner()" style="padding:11px 28px;background:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">✕ Annuler</button>
+  <canvas id="scanner-canvas"></canvas>
+  <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center">Le QR code sera détecté automatiquement</div>
+  <button class="btn btn-secondary btn-sm" onclick="stopScanner()" style="width:auto;padding:10px 24px">Annuler</button>
 </div>
 
-<!-- ═══ CONSENT MODAL ═══ -->
-<div id="consent-modal">
-  <div id="consent-box">
-    <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔐 Consentement d'accès</div>
-    <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px" id="consent-hopital-name"></div>
-    <div style="background:var(--blue-light);border-radius:12px;padding:1.25rem;margin-bottom:16px;text-align:center">
-      <div style="font-size:17px;font-weight:800;color:var(--blue-dark)" id="consent-patient-name"></div>
-      <div style="font-size:12px;color:var(--text-mid);font-family:var(--mono);margin-top:4px" id="consent-patient-id"></div>
-    </div>
-    <div style="font-size:13px;color:var(--text-mid);margin-bottom:16px;line-height:1.6">
-      En confirmant, le patient autorise le personnel soignant à consulter ses informations médicales pour cette consultation uniquement.
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="denyConsent()">✕ Refuser</button>
-      <button class="btn btn-green btn-icon" onclick="grantConsent()">✓ Autoriser l'accès</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SURVEY MODAL ═══ -->
-<div id="survey-modal">
-  <div id="survey-box">
-    <div style="font-size:17px;font-weight:800;margin-bottom:4px">📋 Évaluation rapide</div>
-    <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Comment s'est passée cette consultation ? (1 min)</div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:4px">Facilité d'utilisation de la plateforme</div>
-    <div class="star-row" id="stars-ease"></div>
-    <div style="font-size:13px;font-weight:700;margin-bottom:4px;margin-top:10px">Rapidité de vérification patient</div>
-    <div class="star-row" id="stars-speed"></div>
-    <label class="lbl" style="margin-top:12px">Commentaire (optionnel)</label>
-    <input class="inp" id="survey-comment" placeholder="Remarque, suggestion..." style="margin-bottom:14px"/>
-    <div id="survey-err" class="alert alert-err" style="display:none"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeSurvey()">Ignorer</button>
-      <button class="btn btn-primary" onclick="submitSurvey()">Envoyer</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ 2FA MODAL ═══ -->
+<!-- ═══════════════ 2FA MODAL ═══════════════ -->
 <div id="twofa-modal">
   <div id="twofa-box">
-    <div style="font-size:28px;margin-bottom:8px">🔐</div>
-    <div style="font-size:18px;font-weight:800;margin-bottom:4px">Vérification 2 étapes</div>
-    <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Un code a été envoyé au numéro enregistré</div>
-    <div class="alert alert-info" style="font-size:13px">
-      💡 Code de test : <strong id="twofa-hint"></strong>
+    <div style="font-size:32px;margin-bottom:12px">🔐</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px">Vérification 2FA</div>
+    <div style="font-size:13px;color:var(--text-soft);margin-bottom:6px" id="twofa-sub">Code envoyé à votre téléphone</div>
+    <div style="background:var(--blue-light);border-radius:10px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--blue)">
+      Code de simulation : <strong id="twofa-hint" style="font-family:var(--mono);font-size:16px"></strong>
     </div>
-    <input class="otp-input" id="twofa-input" type="text" maxlength="6" placeholder="······"
-      onkeydown="if(event.key==='Enter')verify2FA()"/>
+    <input class="otp-input inp" id="twofa-input" maxlength="6" placeholder="_ _ _ _ _ _" onkeydown="if(event.key==='Enter')verify2FA()"/>
     <div id="twofa-err" class="alert alert-err" style="display:none"></div>
-    <button class="btn btn-primary" onclick="verify2FA()">Vérifier le code</button>
-    <button class="btn btn-secondary" onclick="cancel2FA()" style="margin-top:6px">Annuler</button>
+    <button class="btn btn-primary" onclick="verify2FA()" style="margin-bottom:10px">Vérifier</button>
+    <button class="btn btn-secondary btn-sm" onclick="cancel2FA()" style="width:auto;margin:0 auto;display:block">Annuler</button>
   </div>
 </div>
 
 <!-- ═══════════════ LOGIN ═══════════════ -->
 <div id="s-login" class="screen active">
-  <div class="header">
-    <div style="font-size:36px;margin-bottom:8px">🏥</div>
-    <div class="header-logo">Alafia Care — Hôpital</div>
-    <div class="header-sub">Espace réservé au personnel soignant</div>
-    <div class="header-wave"></div>
-  </div>
-  <div class="content" style="max-width:480px;margin:0 auto;width:100%">
-    <div class="form-card">
-      <div class="form-title">Connexion sécurisée</div>
-      <div class="form-sub">Entrez vos identifiants d'établissement</div>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">Alafia Care</div>
+      <div class="login-title">🏥 Espace Hôpital</div>
+      <div class="login-sub">Accès réservé au personnel médical autorisé</div>
       <label class="lbl">Email de l'établissement</label>
-      <input class="inp" id="login-email" type="email" placeholder="hopital.parakou@alafiacare.bj"
-        style="margin-bottom:14px" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
+      <input class="inp" id="login-email" type="email" placeholder="hopital.parakou@alafiacare.bj" onkeydown="if(event.key==='Enter')doLogin()"/>
       <label class="lbl">Mot de passe</label>
-      <input class="inp" id="login-pw" type="password" placeholder="••••••••"
-        style="margin-bottom:14px" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <input class="inp" id="login-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
       <div id="login-err" class="alert alert-err" style="display:none"></div>
-      <button class="btn btn-primary btn-icon" onclick="doLogin()">
-        <span>🔑</span><span>Accéder à l'espace hôpital</span>
-      </button>
-    </div>
-    <div style="text-align:center;font-size:11px;color:var(--text-soft);font-family:var(--mono);margin-top:1rem">
-      Alafia Care MVP v1.0 — Parakou, Bénin
+      <button class="btn btn-primary" onclick="doLogin()">Accéder →</button>
+      <div style="text-align:center;margin-top:1rem;font-size:11px;color:var(--text-soft)">Contactez l'administration Alafia Care pour obtenir vos accès</div>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ DASHBOARD ═══════════════ -->
 <div id="s-dash" class="screen">
-  <!-- Topbar -->
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-name" id="dash-hopital-name">Hôpital</div>
-      <div class="topbar-sub" id="dash-hopital-ville"></div>
+      <div class="topbar-icon">🏥</div>
+      <div>
+        <div class="topbar-name" id="dash-hopital-nom">Hôpital</div>
+        <div class="topbar-hopital" id="dash-hopital-ville"></div>
+      </div>
     </div>
     <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
   </div>
 
-  <!-- Tabs -->
+  <!-- TABS -->
   <div class="tabs">
-    <div class="tab-btn-wrap">
-      <button class="tab-btn active" id="tab-nouveau" onclick="switchTab('nouveau')">➕ Nouveau dossier</button>
-    </div>
-    <div class="tab-btn-wrap">
-      <button class="tab-btn" id="tab-historique" onclick="switchTab('historique')">📋 Historique</button>
-      <div class="notif-dot" id="notif-dot"></div>
-    </div>
-    <div class="tab-btn-wrap">
-      <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
-    </div>
+    <button class="tab active" id="tab-nouveau" onclick="switchTab('nouveau')">➕ Nouveau dossier</button>
+    <button class="tab" id="tab-historique" onclick="switchTab('historique')">📋 Historique <span id="hist-badge" class="tab-badge" style="display:none">!</span></button>
+    <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
   <!-- ── ONGLET NOUVEAU DOSSIER ── -->
   <div id="pane-nouveau" style="flex:1;overflow-y:auto">
-    <div class="content">
+    <div class="content-wide">
 
-      <!-- ZONE RECHERCHE -->
-      <div id="zone-recherche">
-        <div class="form-card">
-          <div class="form-title">Nouveau dossier patient</div>
-          <div class="form-sub">Identifiez le patient par QR code ou identifiant Alafia</div>
-          <label class="lbl">Identifiant patient ou numéro de téléphone</label>
-          <div class="inp-row">
-            <input class="inp" id="pid-input" placeholder="Ex: AL-ABC123 ou +229 97..." onkeydown="if(event.key==='Enter')searchPatient()"/>
-            <button class="btn btn-primary btn-sm" onclick="searchPatient()" style="white-space:nowrap">🔍 Rechercher</button>
+      <!-- Zone recherche -->
+      <div id="search-zone">
+        <div class="card">
+          <div class="card-title">🔍 Identifier le patient</div>
+          <div class="card-sub">Entrez l'identifiant Alafia, le numéro de téléphone, ou scannez le QR code</div>
+          <label class="lbl">Identifiant Alafia ou téléphone</label>
+          <input class="inp" id="h-pid" placeholder="Ex: AL-ABC123 ou +229 97..." onkeydown="if(event.key==='Enter')hSearch()"/>
+          <div id="h-err" class="alert alert-err" style="display:none"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="hSearch()" style="flex:1">🔍 Rechercher</button>
+            <button class="btn btn-secondary" onclick="startScanner()" style="flex:1">📷 Scanner QR</button>
           </div>
-          <button class="btn btn-green btn-icon" onclick="startScanner()">
-            <span>📷</span><span>Scanner le QR code patient</span>
-          </button>
-          <div id="search-err" class="alert alert-err" style="display:none;margin-top:10px"></div>
         </div>
       </div>
 
-      <!-- ZONE FORMULAIRE DOSSIER (cachée au départ) -->
-      <div id="zone-formulaire" style="display:none">
+      <!-- Zone formulaire dossier -->
+      <div id="form-zone" style="display:none">
+        <button class="back-btn" onclick="hReset()">← Nouvelle recherche</button>
 
         <!-- Carte patient -->
-        <div id="patient-card-zone"></div>
-
-        <!-- Info validation auto -->
-        <div id="auto-info" style="display:none"></div>
+        <div id="patient-card"></div>
 
         <!-- Actes médicaux -->
-        <div class="form-card">
-          <div class="form-title">🩺 Actes réalisés</div>
-          <div class="form-sub">Sélectionnez tous les actes effectués</div>
+        <div class="card">
+          <div class="card-title">🩺 Actes médicaux réalisés</div>
+          <div class="card-sub">Sélectionnez tous les actes effectués</div>
           <div class="actes-grid" id="actes-grid"></div>
-        </div>
-
-        <!-- Montant -->
-        <div class="form-card">
-          <div class="form-title">💰 Facturation</div>
-          <div class="form-sub">Saisissez le montant total de la consultation</div>
-          <label class="lbl">Montant total (FCFA) *</label>
-          <input class="inp" id="montant-input" type="number" placeholder="Ex: 25000"
-            style="margin-bottom:6px" oninput="checkAutoVal()"/>
-          <div id="validation-preview" style="display:none"></div>
-          <div id="form-err" class="alert alert-err" style="display:none;margin-top:10px"></div>
-          <div class="btn-row" style="margin-top:14px">
-            <button class="btn btn-secondary" onclick="resetForm()">✕ Annuler</button>
-            <button class="btn btn-primary btn-icon" id="submit-btn" onclick="submitDossier()">
-              <span>📤</span><span>Envoyer à l'assurance</span>
-            </button>
+          <label class="lbl" style="margin-top:8px">Montant total (FCFA) *</label>
+          <input class="inp" id="h-mnt" type="number" placeholder="Ex: 25000" oninput="checkAutoVal()"/>
+          <div id="auto-info" style="display:none" class="alert"></div>
+          <div id="form-err" class="alert alert-err" style="display:none"></div>
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <button class="btn btn-secondary" onclick="hReset()" style="flex:1">Annuler</button>
+            <button class="btn btn-green" id="submit-btn" onclick="hSubmit()" style="flex:2">Envoyer à l'assurance →</button>
           </div>
         </div>
-
       </div>
+
+      <!-- Message succès -->
+      <div id="success-msg" style="display:none"></div>
 
     </div>
   </div>
 
   <!-- ── ONGLET HISTORIQUE ── -->
   <div id="pane-historique" style="display:none;flex:1;overflow-y:auto">
-    <div class="content">
+    <div class="content-wide">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+        <button class="btn btn-secondary btn-sm" id="f-tous" onclick="hFilter('tous')" style="flex:1">Tous</button>
+        <button class="btn btn-secondary btn-sm" id="f-attente" onclick="hFilter('en attente')" style="flex:1">En attente</button>
+        <button class="btn btn-secondary btn-sm" id="f-valide" onclick="hFilter('validé')" style="flex:1">Validés</button>
+        <button class="btn btn-secondary btn-sm" id="f-rejete" onclick="hFilter('rejeté')" style="flex:1">Rejetés</button>
+      </div>
       <div id="hist-list"></div>
     </div>
   </div>
 
   <!-- ── ONGLET STATS ── -->
   <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
-    <div class="content">
+    <div class="content-wide">
       <div class="stats-grid" id="stats-grid"></div>
-      <div id="stats-details"></div>
+      <div id="stats-detail"></div>
     </div>
   </div>
 
-</div><!-- /s-dash -->
+</div>
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,where,onSnapshot,orderBy}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,addDoc,getDocs,doc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getAuth,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// ── FIREBASE CONFIG ──
 const app=initializeApp({
   apiKey:"AIzaSyAT5wcCQJ1dqzJZ1y6WAwXdGd10QX9oM5Y",
   authDomain:"alafia-care.firebaseapp.com",
@@ -426,34 +339,24 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 // ── ACTES ──
-const ACTES=[
-  "Consultation générale","Consultation spécialisée",
-  "Radiographie","Échographie",
-  "Analyse sanguine","Analyse urinaire",
-  "Hospitalisation","Soins infirmiers",
-  "Médicaments","Chirurgie mineure",
-  "Obstétrique","Pédiatrie"
-];
+const ACTES=["Consultation générale","Radiographie","Analyse sanguine","Échographie","Hospitalisation","Médicaments","Chirurgie mineure","Soins infirmiers","Vaccination","Dentisterie","Ophtalmologie","Kinésithérapie"];
 
 // ── STATE ──
-let hopitalProfile=null;     // {nom, ville, email, _id}
-let currentPatient=null;     // patient trouvé
-let selectedActes=[];
-let twoFACode=null;
-let twoFAPending=null;
-let consentResolve=null;
-let surveyStars={ease:0,speed:0};
-let dossiersListener=null;
-let dossiersCache=[];
-let histLoaded=false;
+let currentHopital=null;
+let hPt=null,hAct=[];
+let scanStream=null,scanFrame=null;
+let twoFACode=null,twoFAPending=null;
+let histFilter="tous";
+let unsubDossiers=null;
+let allDossiers=[];
 
 // ── HELPERS ──
 const $=id=>document.getElementById(id);
-const fmt=n=>n?Number(n).toLocaleString("fr-FR"):"0";
+const fmt=n=>n?n.toLocaleString("fr-FR"):"0";
 const fdate=ts=>{
   if(!ts)return"";
   const d=ts.toDate?ts.toDate():new Date(ts);
-  return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
+  return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
 };
 const showOv=msg=>{$("ov").style.display="flex";$("ov-msg").textContent=msg||"Chargement..."};
 const hideOv=()=>$("ov").style.display="none";
@@ -461,492 +364,399 @@ const showToast=(msg,color="#1A1A2E")=>{
   const t=$("toast");t.textContent=msg;t.style.background=color;t.style.opacity="1";
   setTimeout(()=>t.style.opacity="0",3500);
 };
-const showErr=(id,msg)=>{const e=$(id);if(e){e.textContent=msg;e.style.display="block"}};
-const hideErr=id=>{const e=$(id);if(e)e.style.display="none"};
-const go=id=>{
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $(id).classList.add("active");
-  window.scrollTo(0,0);
-};
-const delayCls=(createdAt)=>{
-  const c=createdAt?.toDate?createdAt.toDate():new Date(createdAt||0);
-  const h=Math.round((Date.now()-c)/36e5);
-  if(h<48)return{cls:"delay-ok",txt:"< 48h ✓"};
-  if(h<72)return{cls:"delay-warn",txt:`${h}h ⚠`};
-  return{cls:"delay-ko",txt:`${h}h ✗`};
-};
 
-// ── NAVIGATION TABS ──
+// ── NAVIGATION ──
 window.switchTab=tab=>{
   ["nouveau","historique","stats"].forEach(t=>{
     $("pane-"+t).style.display=t===tab?"flex":"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
   if(tab==="historique"){
-    $("notif-dot").style.display="none";
-    histLoaded=false;
+    $("hist-badge").style.display="none";
     renderHistorique();
   }
-  if(tab==="stats")renderStats();
+  if(tab==="stats") renderStats();
 };
 
 // ── LOGIN ──
 window.doLogin=async()=>{
   const email=$("login-email").value.trim();
   const pw=$("login-pw").value;
-  hideErr("login-err");
-  if(!email||!pw){showErr("login-err","Entrez votre email et mot de passe.");return;}
-  showOv("Connexion en cours...");
+  $("login-err").style.display="none";
+  if(!email||!pw){$("login-err").textContent="Remplissez l'email et le mot de passe.";$("login-err").style.display="block";return;}
+  showOv("Vérification...");
   try{
     await signInWithEmailAndPassword(auth,email,pw);
+    hideOv();
     // Chercher le profil hôpital dans Firestore
-    const snap=await getDocs(query(collection(db,"hopitaux"),where("email","==",email)));
-    if(snap.empty){
+    const hops=await getDocs(query(collection(db,"hopitaux"),where("email","==",email)));
+    if(hops.empty){
       await signOut(auth);
-      hideOv();
-      showErr("login-err","Aucun profil hôpital trouvé pour cet email. Contactez l'administrateur.");
+      $("login-err").textContent="Aucun établissement trouvé pour cet email. Contactez l'administration.";
+      $("login-err").style.display="block";
       return;
     }
-    hopitalProfile={...snap.docs[0].data(),_id:snap.docs[0].id};
-    hideOv();
-    // Afficher 2FA
-    show2FA(email);
+    const hopData={...hops.docs[0].data(),_id:hops.docs[0].id};
+    // Lancer 2FA
+    show2FA(hopData);
   }catch(e){
     hideOv();
-    showErr("login-err","Email ou mot de passe incorrect.");
     $("login-pw").value="";
+    $("login-err").textContent="Email ou mot de passe incorrect.";
+    $("login-err").style.display="block";
   }
 };
 
 // ── 2FA ──
-function show2FA(email){
+function show2FA(hopData){
   twoFACode=Math.floor(100000+Math.random()*900000).toString();
-  twoFAPending={email};
+  twoFAPending=hopData;
   $("twofa-hint").textContent=twoFACode;
+  $("twofa-sub").textContent="Code de vérification — "+hopData.nom;
   $("twofa-input").value="";
-  hideErr("twofa-err");
+  $("twofa-err").style.display="none";
   $("twofa-modal").classList.add("active");
   setTimeout(()=>$("twofa-input").focus(),200);
 }
-window.verify2FA=()=>{
+
+window.verify2FA=async()=>{
   const v=$("twofa-input").value.trim();
-  if(v!==twoFACode){showErr("twofa-err","Code incorrect. Vérifiez et réessayez.");return;}
+  if(v!==twoFACode){
+    $("twofa-err").textContent="Code incorrect. Réessayez.";
+    $("twofa-err").style.display="block";
+    return;
+  }
   $("twofa-modal").classList.remove("active");
-  twoFACode=null;twoFAPending=null;
-  showToast("✅ Connexion 2FA réussie","#185FA5");
-  initDashboard();
+  currentHopital=twoFAPending;
+  twoFAPending=null;twoFACode=null;
+  showToast("✅ Connexion sécurisée — "+currentHopital.nom,"#0A7C5C");
+  initDash();
 };
+
 window.cancel2FA=async()=>{
   $("twofa-modal").classList.remove("active");
+  twoFAPending=null;twoFACode=null;
   await signOut(auth);
-  hopitalProfile=null;
 };
 
-// ── INIT DASHBOARD ──
-function initDashboard(){
-  $("dash-hopital-name").textContent=hopitalProfile.nom||"Hôpital";
-  $("dash-hopital-ville").textContent="📍 "+( hopitalProfile.ville||"");
-  go("s-dash");
+// ── INIT DASH ──
+function initDash(){
+  $("dash-hopital-nom").textContent=currentHopital.nom;
+  $("dash-hopital-ville").textContent=currentHopital.ville||"";
   switchTab("nouveau");
-  buildActesGrid();
-  // Listener temps réel sur les dossiers de cet hôpital
-  startDossiersListener();
-}
-
-function startDossiersListener(){
-  if(dossiersListener)dossiersListener();
-  const q=query(collection(db,"dossiers"),where("hopitalEmail","==",hopitalProfile.email));
-  dossiersListener=onSnapshot(q,snap=>{
-    dossiersCache=snap.docs.map(d=>({...d.data(),_id:d.id}))
-      .sort((a,b)=>{
-        const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);
-        const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);
-        return tb-ta;
-      });
-    const changes=snap.docChanges().filter(c=>c.type==="modified");
-    if(changes.length>0){
-      const updated=changes.filter(c=>c.doc.data().statut==="validé"||c.doc.data().statut==="rejeté");
-      if(updated.length>0){
-        $("notif-dot").style.display="block";
-        showToast("🔔 Un dossier a été mis à jour par l'assurance","#185FA5");
-      }
+  renderActes();
+  // Listener temps réel
+  if(unsubDossiers)unsubDossiers();
+  unsubDossiers=onSnapshot(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)),snap=>{
+    allDossiers=snap.docs.map(d=>({...d.data(),_id:d.id}));
+    const updated=snap.docChanges().filter(c=>c.type==="modified"&&(c.doc.data().statut==="validé"||c.doc.data().statut==="rejeté"));
+    if(updated.length>0){
+      $("hist-badge").style.display="inline-flex";
+      showToast("🔔 Un dossier a été mis à jour par l'assurance","#1A56DB");
     }
-    if(histLoaded)renderHistorique();
   });
+  go("s-dash");
 }
 
-// ── LOGOUT ──
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
 window.doLogout=async()=>{
-  if(dossiersListener){dossiersListener();dossiersListener=null;}
+  if(unsubDossiers){unsubDossiers();unsubDossiers=null;}
+  currentHopital=null;hPt=null;hAct=[];
   await signOut(auth);
-  hopitalProfile=null;currentPatient=null;selectedActes=[];
-  dossiersCache=[];histLoaded=false;
   go("s-login");
 };
 
-// ── SCANNER ──
-let scanStream=null,scanFrame=null;
-window.startScanner=async()=>{
-  $("scanner-modal").classList.add("active");
-  try{
-    try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});}
-    catch{scanStream=await navigator.mediaDevices.getUserMedia({video:true});}
-    $("scan-video").srcObject=scanStream;
-    await $("scan-video").play();
-    scanLoop();
-  }catch(e){
-    stopScanner();
-    let msg="Erreur caméra : "+e.message;
-    if(e.name==="NotAllowedError")msg="Permission caméra refusée.\nAutorisez la caméra dans les paramètres du navigateur.";
-    if(e.name==="NotFoundError")msg="Aucune caméra détectée. Saisissez l'identifiant manuellement.";
-    alert(msg);
-  }
-};
-function scanLoop(){
-  if(!scanStream)return;
-  const video=$("scan-video"),canvas=$("scan-canvas");
-  if(video.readyState===video.HAVE_ENOUGH_DATA){
-    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-    const ctx=canvas.getContext("2d");ctx.drawImage(video,0,0);
-    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const code=jsQR(img.data,img.width,img.height,{inversionAttempts:"dontInvert"});
-    if(code&&code.data.startsWith("AL-")){
-      stopScanner();
-      $("pid-input").value=code.data;
-      searchPatient();
-      return;
-    }
-  }
-  scanFrame=requestAnimationFrame(scanLoop);
-}
-window.stopScanner=()=>{
-  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
-  if(scanFrame){cancelAnimationFrame(scanFrame);scanFrame=null;}
-  $("scanner-modal").classList.remove("active");
-};
-
-// ── RECHERCHE PATIENT ──
-window.searchPatient=async()=>{
-  const q=$("pid-input").value.trim();
-  hideErr("search-err");
-  if(!q){showErr("search-err","Entrez un identifiant ou numéro de téléphone.");return;}
-  showOv("Recherche du patient...");
-  try{
-    const snap=await getDocs(collection(db,"patients"));
-    const pts=snap.docs.map(d=>({...d.data(),_id:d.id}));
-    hideOv();
-    const p=pts.find(x=>
-      (x.alafiaId&&x.alafiaId===q.toUpperCase())||
-      x.tel===q
-    );
-    if(!p){
-      const enAttente=pts.find(x=>x.tel===q&&x.statut==="en_attente");
-      if(enAttente)showErr("search-err","Ce patient est en attente de validation par son assurance.");
-      else showErr("search-err","Patient introuvable. Vérifiez l'identifiant ou le numéro.");
-      return;
-    }
-    if(!p.alafiaId||p.statut==="en_attente"){
-      showErr("search-err","Ce patient n'a pas encore été validé par son assurance.");
-      return;
-    }
-    // Demander consentement
-    const ok=await askConsent(p);
-    if(!ok){showErr("search-err","Accès aux données refusé par le patient ou l'opérateur.");return;}
-    currentPatient=p;
-    selectedActes=[];
-    showPatientForm(p);
-  }catch(e){
-    hideOv();
-    showErr("search-err","Erreur de connexion. Vérifiez votre internet.");
-  }
-};
-
-// ── CONSENTEMENT ──
-function askConsent(p){
-  return new Promise(resolve=>{
-    consentResolve=resolve;
-    $("consent-hopital-name").textContent=hopitalProfile.nom+" demande l'accès au dossier de :";
-    $("consent-patient-name").textContent=p.prenom+" "+p.nom;
-    $("consent-patient-id").textContent=p.alafiaId+" — "+p.tel;
-    $("consent-modal").classList.add("active");
-  });
-}
-window.grantConsent=()=>{$("consent-modal").classList.remove("active");if(consentResolve){consentResolve(true);consentResolve=null;}};
-window.denyConsent=()=>{$("consent-modal").classList.remove("active");if(consentResolve){consentResolve(false);consentResolve=null;}};
-
-// ── AFFICHAGE FORMULAIRE PATIENT ──
-function showPatientForm(p){
-  $("zone-recherche").style.display="none";
-  $("zone-formulaire").style.display="block";
-  const auto=p.assuranceValide;
-  const isAuto=auto&&(p.assurancePlafond>0);
-
-  // Choisir style carte
-  const cls=isAuto?"patient-card-purple":auto?"patient-card-green":"patient-card-blue";
-  const headerColor=isAuto?"var(--purple)":auto?"var(--green)":"var(--blue)";
-
-  const medInfo=[];
-  if(p.groupeSanguin)medInfo.push(`🩸 Groupe : <strong>${p.groupeSanguin}</strong>`);
-  if(p.allergies)medInfo.push(`⚠️ Allergies : <strong>${p.allergies}</strong>`);
-  if(p.antecedents)medInfo.push(`📋 Antécédents : <strong>${p.antecedents}</strong>`);
-
-  $("patient-card-zone").innerHTML=`
-    <div class="patient-card ${cls}" style="margin-bottom:1rem">
-      <div class="patient-card-header" style="color:${headerColor}">
-        ${isAuto?"⚡ VALIDATION AUTOMATIQUE ACTIVÉE":"✓ PATIENT IDENTIFIÉ — Accès consenti"}
-      </div>
-      <div class="patient-name">${p.prenom} ${p.nom}</div>
-      <div class="patient-meta">ID : ${p.alafiaId} &nbsp;·&nbsp; ${p.tel}</div>
-      <div class="chips-row">
-        ${auto?`<span class="chip chip-auto">⚡ ${p.assuranceType}</span>
-                <span class="chip chip-ok">${p.assuranceTaux}% couvert</span>
-                <span class="chip chip-info">Plafond ${fmt(p.assurancePlafond)} FCFA</span>`
-               :`<span class="chip chip-ok">✓ Compte actif</span>`}
-      </div>
-      ${medInfo.length>0?`<div class="med-info">${medInfo.join("<br/>")}</div>`:""}
-      ${isAuto?`<div class="auto-badge" style="color:${headerColor}">⚡ Ce dossier sera validé automatiquement si le montant est dans le plafond</div>`:""}
-    </div>`;
-
-  $("auto-info").style.display="none";
-  $("montant-input").value="";
-  $("validation-preview").style.display="none";
-
-  const btn=$("submit-btn");
-  btn.innerHTML=isAuto?"<span>⚡</span><span>Valider automatiquement</span>":"<span>📤</span><span>Envoyer à l'assurance</span>";
-
-  renderActesGrid();
-  $("zone-formulaire").scrollIntoView({behavior:"smooth",block:"start"});
-}
-
 // ── ACTES GRID ──
-function buildActesGrid(){
+function renderActes(){
   $("actes-grid").innerHTML=ACTES.map(a=>`
-    <label class="acte-item" id="acte-${a.replace(/\s+/g,"-")}" onclick="toggleActe('${a}',this)">
-      <input type="checkbox" onchange="event.stopPropagation()"/> ${a}
+    <label class="acte-item" id="acte-${a.replace(/\s/g,'_')}">
+      <input type="checkbox" onchange="tAct('${a}')"/> ${a}
     </label>`).join("");
 }
-function renderActesGrid(){
-  document.querySelectorAll(".acte-item").forEach(el=>{
-    el.classList.remove("selected");
-    el.querySelector("input").checked=false;
-  });
-  selectedActes=[];
-}
-window.toggleActe=(acte,el)=>{
-  el.classList.toggle("selected");
-  const cb=el.querySelector("input");
-  cb.checked=!cb.checked;
-  if(cb.checked)selectedActes.push(acte);
-  else selectedActes=selectedActes.filter(a=>a!==acte);
+
+window.tAct=a=>{
+  hAct.includes(a)?hAct=hAct.filter(x=>x!==a):hAct.push(a);
+  const id="acte-"+a.replace(/\s/g,'_');
+  $(id)?.classList.toggle("selected",hAct.includes(a));
   checkAutoVal();
 };
 
-// ── VÉRIFICATION AUTO ──
 window.checkAutoVal=()=>{
-  if(!currentPatient?.assuranceValide)return;
-  const mnt=parseInt($("montant-input").value)||0;
-  const preview=$("validation-preview");
-  if(mnt<=0){preview.style.display="none";return;}
-  const taux=currentPatient.assuranceTaux||0;
-  const plafond=currentPatient.assurancePlafond||0;
-  if(mnt<=plafond){
-    const remb=Math.round(mnt*taux/100);
-    const rac=mnt-remb;
-    preview.style.display="block";
-    preview.style.cssText="display:block;background:var(--purple-light);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--purple);margin-top:6px";
-    preview.innerHTML=`⚡ <strong>Validation automatique</strong><br/>
-      Remboursement estimé : <strong>${fmt(remb)} FCFA</strong> (${taux}%)<br/>
-      Reste à charge patient : <strong>${fmt(rac)} FCFA</strong>`;
+  if(!hPt||!hPt.assuranceValide)return;
+  const mnt=parseInt($("h-mnt").value)||0;
+  const info=$("auto-info");
+  if(mnt<=0){info.style.display="none";return;}
+  if(mnt<=hPt.assurancePlafond){
+    const r=Math.round(mnt*hPt.assuranceTaux/100);
+    info.className="alert alert-auto";
+    info.style.display="block";
+    info.innerHTML=`⚡ Validation automatique — Remboursement estimé : <strong>${fmt(r)} FCFA</strong> (${hPt.assuranceTaux}%)`;
+    $("submit-btn").textContent="⚡ Valider automatiquement";
   }else{
-    preview.style.display="block";
-    preview.style.cssText="display:block;background:var(--gold-light);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#7A4500;margin-top:6px";
-    preview.innerHTML=`⚠️ Montant dépasse le plafond (<strong>${fmt(plafond)} FCFA</strong>)<br/>
-      Ce dossier sera transmis à l'assurance pour validation manuelle.`;
+    info.className="alert alert-warn";
+    info.style.display="block";
+    info.innerHTML=`⚠️ Montant dépasse le plafond disponible (${fmt(hPt.assurancePlafond)} FCFA). Le dossier sera envoyé pour validation manuelle.`;
+    $("submit-btn").textContent="Envoyer à l'assurance →";
   }
 };
 
-// ── RESET FORMULAIRE ──
-window.resetForm=()=>{
-  currentPatient=null;selectedActes=[];
-  $("pid-input").value="";
-  $("zone-recherche").style.display="block";
-  $("zone-formulaire").style.display="none";
-  $("auto-info").style.display="none";
-  $("validation-preview").style.display="none";
-  hideErr("form-err");hideErr("search-err");
-  renderActesGrid();
+// ── RECHERCHE PATIENT ──
+window.hSearch=async()=>{
+  const q=$("h-pid").value.trim();
+  $("h-err").style.display="none";
+  if(!q){$("h-err").textContent="Entrez un identifiant ou numéro de téléphone.";$("h-err").style.display="block";return;}
+  showOv("Recherche du patient...");
+  const pts=await getDocs(collection(db,"patients"));
+  hideOv();
+  const all=pts.docs.map(d=>({...d.data(),_id:d.id}));
+  const p=all.find(x=>x.alafiaId&&(x.alafiaId===q.toUpperCase()||x.tel===q));
+  if(p){
+    const consent=await showConsentModal(p);
+    if(!consent){$("h-err").textContent="Accès aux données refusé par le patient.";$("h-err").style.display="block";return;}
+    loadPatientForm(p);
+  }else{
+    const any=all.find(x=>x.tel===q);
+    if(any&&any.statut==="en_attente") $("h-err").textContent="Ce patient est en attente de validation par son assurance.";
+    else $("h-err").textContent="Patient introuvable. Vérifiez l'identifiant ou le numéro.";
+    $("h-err").style.display="block";
+  }
 };
+
+function loadPatientForm(p){
+  hPt=p;hAct=[];
+  // Reset actes
+  ACTES.forEach(a=>document.getElementById("acte-"+a.replace(/\s/g,'_'))?.classList.remove("selected"));
+  $("h-mnt").value="";
+  $("auto-info").style.display="none";
+  $("form-err").style.display="none";
+
+  const auto=p.assuranceValide;
+  const medInfo=[];
+  if(p.groupeSanguin) medInfo.push(`🩸 Groupe sanguin : <strong>${p.groupeSanguin}</strong>`);
+  if(p.allergies) medInfo.push(`⚠️ Allergies : <strong>${p.allergies}</strong>`);
+  if(p.antecedents) medInfo.push(`📋 Antécédents : <strong>${p.antecedents}</strong>`);
+
+  $("patient-card").className="patient-found "+(auto?"patient-found-auto":"patient-found-std");
+  $("patient-card").innerHTML=`
+    <div class="patient-badge" style="color:${auto?"var(--purple)":"var(--green)"}">✓ PATIENT IDENTIFIÉ — Accès consenti</div>
+    <div class="patient-name">${p.prenom} ${p.nom}</div>
+    <div class="patient-info">ID : ${p.alafiaId} &nbsp;·&nbsp; ${p.tel}</div>
+    <div class="chips-row">
+      ${auto
+        ?`<span class="chip chip-auto">⚡ ${p.assuranceType}</span>
+           <span class="chip chip-ok">${p.assuranceTaux}% couvert</span>
+           <span class="chip chip-info">Plafond : ${fmt(p.assurancePlafond)} FCFA</span>`
+        :'<span class="chip chip-ok">✓ Compte actif</span>'}
+    </div>
+    ${medInfo.length>0?`<div class="med-info">${medInfo.join("<br/>")}</div>`:""}
+    ${auto?'<div style="font-size:11px;color:var(--purple);margin-top:8px;font-weight:600">⚡ Validation automatique si montant ≤ plafond</div>':""}
+  `;
+
+  $("search-zone").style.display="none";
+  $("form-zone").style.display="block";
+  $("submit-btn").textContent=auto?"⚡ Valider automatiquement":"Envoyer à l'assurance →";
+}
+
+// ── CONSENTEMENT ──
+function showConsentModal(p){
+  return new Promise(resolve=>{
+    const m=document.createElement("div");
+    m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+    m.innerHTML=`
+      <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
+        <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔐 Consentement d'accès</div>
+        <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">
+          <strong>${currentHopital.nom}</strong> demande l'accès au dossier médical de :
+        </div>
+        <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center;border:1.5px solid #9FE1CB">
+          <div style="font-size:18px;font-weight:800;color:var(--green)">${p.prenom} ${p.nom}</div>
+          <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px;line-height:1.6">
+          En confirmant, vous autorisez le personnel soignant à consulter vos informations médicales pour cette consultation.
+        </div>
+        <div style="display:flex;gap:10px">
+          <button id="c-no" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">✕ Refuser</button>
+          <button id="c-yes" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--green),#1D9E75);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✓ Autoriser l'accès</button>
+        </div>
+      </div>`;
+    document.body.appendChild(m);
+    m.querySelector("#c-yes").onclick=()=>{document.body.removeChild(m);resolve(true);};
+    m.querySelector("#c-no").onclick=()=>{document.body.removeChild(m);resolve(false);};
+  });
+}
 
 // ── SOUMETTRE DOSSIER ──
-window.submitDossier=async()=>{
-  const mnt=$("montant-input").value;
-  hideErr("form-err");
-  if(!currentPatient){showErr("form-err","Aucun patient sélectionné.");return;}
-  if(selectedActes.length===0){showErr("form-err","Sélectionnez au moins un acte médical.");return;}
-  if(!mnt||parseInt(mnt)<=0){showErr("form-err","Saisissez un montant valide.");return;}
-  const montant=parseInt(mnt);
-  const auto=currentPatient.assuranceValide&&montant<=currentPatient.assurancePlafond;
-  const remb=auto?Math.round(montant*currentPatient.assuranceTaux/100):null;
-  showOv(auto?"Validation automatique...":"Envoi à l'assurance...");
-  try{
-    await addDoc(collection(db,"dossiers"),{
-      patientId:currentPatient.alafiaId,
-      patientNom:currentPatient.prenom+" "+currentPatient.nom,
-      hopital:hopitalProfile.nom,
-      hopitalEmail:hopitalProfile.email,
-      hopitalVille:hopitalProfile.ville||"",
-      actes:[...selectedActes],
-      montant,
-      statut:auto?"validé":"en attente",
-      autoValidated:auto,
-      remboursement:remb,
-      couverture:currentPatient.assuranceTaux||null,
-      assuranceCompagnie:currentPatient.compagnie||null,
-      createdAt:new Date()
-    });
-    hideOv();
-    showToast(
-      auto?`⚡ Validé automatiquement ! Remb. ${fmt(remb)} FCFA`:"✅ Dossier transmis à l'assurance",
-      auto?"#534AB7":"#0A7C5C"
-    );
-    resetForm();
-    // Enquête satisfaction après 5s
-    setTimeout(()=>openSurvey(),5000);
-  }catch(e){
-    hideOv();
-    showErr("form-err","Erreur lors de l'envoi. Vérifiez votre connexion et réessayez.");
+window.hSubmit=async()=>{
+  $("form-err").style.display="none";
+  const mnt=parseInt($("h-mnt").value);
+  if(!hPt||hAct.length===0||!mnt||mnt<=0){
+    $("form-err").textContent="Sélectionnez au moins un acte et entrez un montant valide.";
+    $("form-err").style.display="block";return;
   }
+  const auto=hPt.assuranceValide&&mnt<=hPt.assurancePlafond;
+  const remb=auto?Math.round(mnt*hPt.assuranceTaux/100):null;
+  showOv(auto?"Validation automatique...":"Envoi à l'assurance...");
+  await addDoc(collection(db,"dossiers"),{
+    patientId:hPt.alafiaId,
+    patientNom:hPt.prenom+" "+hPt.nom,
+    hopital:currentHopital.nom,
+    hopitalId:currentHopital._id,
+    hopitalVille:currentHopital.ville||"",
+    actes:[...hAct],
+    montant:mnt,
+    statut:auto?"validé":"en attente",
+    autoValidated:auto,
+    remboursement:remb,
+    couverture:hPt.assuranceTaux||null,
+    assuranceCompagnie:hPt.compagnie||null,
+    createdAt:new Date(),
+    updatedAt:new Date()
+  });
+  hideOv();
+  hReset();
+  const msg=$("success-msg");
+  msg.innerHTML=auto
+    ?`<div class="alert alert-auto" style="border-radius:var(--radius)">⚡ Dossier validé automatiquement ! Remboursement : <strong>${fmt(remb)} FCFA</strong> (${hPt?.assuranceTaux}%)</div>`
+    :`<div class="alert alert-ok" style="border-radius:var(--radius)">✅ Dossier transmis à l'assurance avec succès. Traitement sous 48h.</div>`;
+  msg.style.display="block";
+  setTimeout(()=>msg.style.display="none",6000);
+  showToast(auto?"⚡ Validé automatiquement !":"✅ Dossier envoyé à l'assurance","#0A7C5C");
+};
+
+window.hReset=()=>{
+  hPt=null;hAct=[];
+  $("h-pid").value="";$("h-mnt").value="";
+  $("h-err").style.display="none";
+  $("form-err").style.display="none";
+  $("auto-info").style.display="none";
+  $("search-zone").style.display="block";
+  $("form-zone").style.display="none";
+  ACTES.forEach(a=>document.getElementById("acte-"+a.replace(/\s/g,'_'))?.classList.remove("selected"));
 };
 
 // ── HISTORIQUE ──
+let currentFilter="tous";
+window.hFilter=filter=>{
+  currentFilter=filter;
+  ["tous","attente","valide","rejete"].forEach(f=>{
+    const btn=$("f-"+f);
+    if(btn) btn.style.background=f===filter||
+      (filter==="en attente"&&f==="attente")||
+      (filter==="validé"&&f==="valide")||
+      (filter==="rejeté"&&f==="rejete")
+      ?"var(--blue)":""
+    ,btn.style.color=f===filter||
+      (filter==="en attente"&&f==="attente")||
+      (filter==="validé"&&f==="valide")||
+      (filter==="rejeté"&&f==="rejete")
+      ?"white":"";
+  });
+  renderHistorique();
+};
+
 async function renderHistorique(){
-  histLoaded=true;
-  const list=$("hist-list");
-  if(dossiersCache.length===0){
-    list.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucun dossier soumis pour le moment.</div></div>';
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  hideOv();
+  let dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  if(currentFilter!=="tous") dos=dos.filter(d=>d.statut===currentFilter);
+  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  if(dos.length===0){
+    $("hist-list").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Aucun dossier trouvé</div></div>';
     return;
   }
-  list.innerHTML=dossiersCache.map(d=>{
-    const dl=d.statut==="en attente"?delayCls(d.createdAt):null;
-    return`<div class="dossier-card">
-      <div class="dossier-header">
-        <div class="dossier-patient">${d.patientNom}</div>
+  $("hist-list").innerHTML=dos.map(d=>`
+    <div class="dossier-row">
+      <div class="dossier-head">
+        <div class="dossier-patient">${d.patientNom||"—"}</div>
         <div style="display:flex;gap:4px;align-items:center">
           ${d.autoValidated?'<span class="chip chip-auto">⚡</span>':""}
           <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
         </div>
       </div>
       <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
-      ${dl?`<div style="font-size:12px;margin-bottom:6px">⏱ Délai : <span class="${dl.cls}">${dl.txt}</span></div>`:""}
       <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
-      <div class="dossier-footer">
-        <div>
-          <div style="font-size:11px;color:var(--text-soft)">Montant total</div>
-          <div class="montant-val">${fmt(d.montant)} FCFA</div>
-        </div>
-        ${d.remboursement!=null?`
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--text-soft)">Remboursé</div>
-          <div class="remb-val">+${fmt(d.remboursement)} FCFA</div>
-        </div>`:""}
+      <div class="dossier-montants">
+        <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
+        ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
       </div>
-      ${d.paye?'<div class="alert alert-ok" style="margin-top:10px;margin-bottom:0;font-size:12px">✅ Reste à charge payé par le patient via MoMo</div>':""}
-    </div>`;
-  }).join("");
+    </div>`).join("");
 }
 
-// ── STATISTIQUES ──
+// ── STATS ──
 async function renderStats(){
-  const dos=dossiersCache;
+  showOv("Calcul...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  hideOv();
+  const dos=snap.docs.map(d=>d.data());
   const total=dos.length;
   const valides=dos.filter(d=>d.statut==="validé").length;
-  const enAttente=dos.filter(d=>d.statut==="en attente").length;
+  const attente=dos.filter(d=>d.statut==="en attente").length;
   const rejetes=dos.filter(d=>d.statut==="rejeté").length;
-  const totalMnt=dos.reduce((s,d)=>s+(d.montant||0),0);
-  const totalRemb=dos.reduce((s,d)=>s+(d.remboursement||0),0);
-  const autoCount=dos.filter(d=>d.autoValidated).length;
-  const taux=total>0?Math.round(valides/total*100):0;
-
-  $("stats-grid").innerHTML=[
-    {l:"Dossiers soumis",v:total,c:"var(--blue)"},
-    {l:"Validés",v:valides,c:"var(--green)"},
-    {l:"En attente",v:enAttente,c:"var(--gold)"},
-    {l:"Rejetés",v:rejetes,c:"var(--red)"},
-  ].map(s=>`<div class="stat-card"><div class="stat-num" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div></div>`).join("");
-
-  $("stats-details").innerHTML=`
-    <div class="form-card">
-      <div class="form-title">📊 Synthèse financière</div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Montant total traité</span>
-        <strong>${fmt(totalMnt)} FCFA</strong>
+  const totalMontant=dos.reduce((s,d)=>s+(d.montant||0),0);
+  const totalRemb=dos.filter(d=>d.remboursement).reduce((s,d)=>s+(d.remboursement||0),0);
+  $("stats-grid").innerHTML=`
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total dossiers</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${valides}</div><div class="stat-label">Validés</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${attente}</div><div class="stat-label">En attente</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${rejetes}</div><div class="stat-label">Rejetés</div></div>`;
+  $("stats-detail").innerHTML=`
+    <div class="card">
+      <div class="card-title">💰 Finances</div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-soft);font-size:14px">Total facturé</span>
+        <strong style="font-size:15px">${fmt(totalMontant)} FCFA</strong>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Remboursements émis</span>
-        <strong style="color:var(--green)">${fmt(totalRemb)} FCFA</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Validations automatiques ⚡</span>
-        <strong style="color:var(--purple)">${autoCount}</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:14px">
-        <span style="color:var(--text-soft)">Taux de validation</span>
-        <strong style="color:var(--blue)">${taux}%</strong>
+      <div style="display:flex;justify-content:space-between;padding:10px 0">
+        <span style="color:var(--text-soft);font-size:14px">Total remboursé par assurances</span>
+        <strong style="font-size:15px;color:var(--green)">+${fmt(totalRemb)} FCFA</strong>
       </div>
     </div>`;
 }
 
-// ── ENQUÊTE SATISFACTION ──
-function openSurvey(){
-  surveyStars={ease:0,speed:0};
-  ["ease","speed"].forEach(k=>{
-    $("stars-"+k).innerHTML=[1,2,3,4,5].map(i=>
-      `<span class="star-btn" data-k="${k}" data-v="${i}" onclick="setStar('${k}',${i})">★</span>`
-    ).join("");
-  });
-  $("survey-comment").value="";
-  hideErr("survey-err");
-  $("survey-modal").classList.add("active");
-}
-window.setStar=(k,v)=>{
-  surveyStars[k]=v;
-  document.querySelectorAll(`.star-btn[data-k="${k}"]`).forEach(s=>{
-    s.classList.toggle("lit",parseInt(s.dataset.v)<=v);
-  });
-};
-window.closeSurvey=()=>$("survey-modal").classList.remove("active");
-window.submitSurvey=async()=>{
-  if(!surveyStars.ease||!surveyStars.speed){showErr("survey-err","Notez les deux critères.");return;}
+// ── SCANNER QR ──
+window.startScanner=async()=>{
+  $("scanner-modal").classList.add("active");
   try{
-    await addDoc(collection(db,"surveys"),{
-      hopital:hopitalProfile.nom,
-      hopitalEmail:hopitalProfile.email,
-      ease:surveyStars.ease,
-      speed:surveyStars.speed,
-      comment:$("survey-comment").value.trim()||null,
-      createdAt:new Date()
-    });
-    $("survey-modal").classList.remove("active");
-    showToast("✅ Merci pour votre retour !","#0A7C5C");
-  }catch(e){showErr("survey-err","Erreur d'envoi. Réessayez.");}
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  }catch(e){
+    try{scanStream=await navigator.mediaDevices.getUserMedia({video:true});}
+    catch(e2){stopScanner();alert("Impossible d'accéder à la caméra.");return;}
+  }
+  $("scanner-video").srcObject=scanStream;
+  scanLoop();
 };
 
-// ── INIT ──
-// Si l'utilisateur est déjà connecté (session persistante), on recharge le profil
-onAuthStateChanged(auth,async user=>{
-  if(user&&!hopitalProfile){
-    try{
-      const snap=await getDocs(query(collection(db,"hopitaux"),where("email","==",user.email)));
-      if(!snap.empty){
-        hopitalProfile={...snap.docs[0].data(),_id:snap.docs[0].id};
-        initDashboard();
-      }else{
-        await signOut(auth);
-        go("s-login");
-      }
-    }catch{go("s-login");}
+function scanLoop(){
+  const video=$("scanner-video");
+  const canvas=$("scanner-canvas");
+  if(!scanStream){return;}
+  if(video.readyState===video.HAVE_ENOUGH_DATA){
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(img.data,img.width,img.height);
+    if(code&&code.data){
+      stopScanner();
+      $("h-pid").value=code.data;
+      hSearch();
+      return;
+    }
   }
-});
+  scanFrame=requestAnimationFrame(scanLoop);
+}
+
+window.stopScanner=()=>{
+  $("scanner-modal").classList.remove("active");
+  if(scanFrame)cancelAnimationFrame(scanFrame);
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+};
 </script>
 </body>
 </html>

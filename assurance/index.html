@@ -9,346 +9,303 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --gold:#C47A00;
-  --gold-mid:#F5A623;
-  --gold-light:#FEF3E2;
-  --gold-bg:#FFFBF2;
+  --orange:#E07B00;
+  --orange-light:#FEF3E2;
+  --orange-mid:#F5A623;
+  --orange-dark:#B86200;
   --green:#0A7C5C;
   --green-light:#E6F5F0;
   --red:#D63031;
   --red-light:#FFEBEE;
-  --blue:#185FA5;
-  --blue-light:#E8F1FB;
-  --purple:#534AB7;
+  --blue:#1A56DB;
+  --blue-light:#EBF5FF;
+  --purple:#6C3FC5;
   --purple-light:#EDE9FE;
   --text:#1A1A2E;
   --text-mid:#4A4A6A;
   --text-soft:#8888A0;
-  --bg:#FDF8F0;
+  --bg:#FFFAF3;
   --card:#FFFFFF;
-  --border:#EDE4D0;
+  --border:#F0E6D3;
   --radius:16px;
   --radius-sm:10px;
-  --shadow:0 2px 16px rgba(196,122,0,0.08);
+  --shadow:0 2px 16px rgba(224,123,0,0.08);
   --font:'Plus Jakarta Sans',sans-serif;
   --mono:'Space Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--text)}
-#app{width:100%;max-width:1024px;margin:0 auto;min-height:100vh;background:var(--bg)}
+#app{width:100%;max-width:1100px;margin:0 auto;min-height:100vh}
 
 /* ── SCREENS ── */
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 
-/* ── HEADER ── */
-.header{background:linear-gradient(135deg,#7A4500 0%,var(--gold) 60%,#F5C040 100%);padding:2.5rem 2rem 2rem;position:relative;overflow:hidden}
-.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.07);border-radius:50%}
-.header-logo{font-family:var(--mono);font-size:20px;font-weight:700;color:white;letter-spacing:1px;margin-bottom:2px}
-.header-sub{font-size:12px;color:rgba(255,255,255,0.75);letter-spacing:0.5px}
-.header-wave{position:absolute;bottom:-1px;left:0;right:0;height:24px;background:var(--bg);border-radius:24px 24px 0 0}
-
-/* ── TOPBAR ── */
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow)}
-.topbar-name{font-size:17px;font-weight:800}
-.topbar-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
-.logout-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--text-soft);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .2s}
-.logout-btn:hover{border-color:var(--red);color:var(--red)}
-
-/* ── TABS ── */
-.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
-.tab-btn-wrap{position:relative;display:flex;flex-shrink:0}
-.tab-btn{padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-soft);font-family:var(--font);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
-.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
-.notif-badge{position:absolute;top:8px;right:4px;background:var(--red);color:white;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px}
-
-/* ── CONTENT ── */
-.content{padding:1.5rem 2rem;flex:1}
-@media(max-width:600px){.content{padding:1rem}.topbar{padding:.875rem 1rem}}
-
-/* ── FORMS ── */
-.form-card{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--shadow);border:1px solid var(--border)}
-.form-title{font-size:17px;font-weight:800;margin-bottom:4px}
-.form-sub{font-size:13px;color:var(--text-soft);margin-bottom:1.5rem;line-height:1.5}
-.lbl{font-size:11px;font-weight:700;color:var(--text-mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--bg);font-family:var(--font);outline:none;transition:border-color .2s;margin-bottom:14px}
-.inp:focus{border-color:var(--gold-mid);background:var(--card)}
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:linear-gradient(135deg,#6B3A00 0%,#C47000 60%,#F5A623 100%)}
+.login-card{background:white;border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.login-logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--orange);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.login-title{font-size:26px;font-weight:800;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text-soft);margin-bottom:2rem;line-height:1.5}
+.lbl{font-size:12px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:#FFFDF9;font-family:var(--font);margin-bottom:14px;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--orange);background:white}
 select.inp{cursor:pointer}
 
 /* ── BUTTONS ── */
-.btn{width:100%;padding:13px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;margin-top:4px}
+.btn{padding:13px 20px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:active{transform:scale(0.98)}
-.btn-primary{background:linear-gradient(135deg,#7A4500,var(--gold-mid));color:white;box-shadow:0 4px 16px rgba(196,122,0,0.3)}
-.btn-green{background:linear-gradient(135deg,var(--green),#1D9E75);color:white;box-shadow:0 4px 16px rgba(10,124,92,0.3)}
-.btn-red{background:var(--red-light);color:var(--red);border:1.5px solid #F5C6CB}
+.btn-block{width:100%}
+.btn-primary{background:linear-gradient(135deg,var(--orange-dark),var(--orange));color:white;box-shadow:0 4px 16px rgba(224,123,0,0.3)}
+.btn-green{background:linear-gradient(135deg,var(--green),#1D9E75);color:white;box-shadow:0 4px 16px rgba(10,124,92,0.25)}
+.btn-red{background:linear-gradient(135deg,#B71C1C,var(--red));color:white;box-shadow:0 4px 16px rgba(214,48,49,0.25)}
 .btn-secondary{background:var(--bg);color:var(--text-mid);border:1.5px solid var(--border)}
-.btn-sm{padding:9px 16px;font-size:13px;width:auto;border-radius:8px;margin-top:0}
-.btn-row{display:flex;gap:8px;margin-top:10px}
-.btn-row .btn{flex:1}
-.btn-icon{display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
 
-/* ── ALERTS ── */
-.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;line-height:1.5}
-.alert-err{background:var(--red-light);color:var(--red);border-left:3px solid var(--red)}
-.alert-ok{background:var(--green-light);color:var(--green);border-left:3px solid var(--green)}
-.alert-info{background:var(--blue-light);color:var(--blue);border-left:3px solid var(--blue)}
-.alert-warn{background:var(--gold-light);color:#7A4500;border-left:3px solid var(--gold-mid)}
-.alert-purple{background:var(--purple-light);color:var(--purple);border-left:3px solid var(--purple)}
+/* ── TOPBAR ── */
+.topbar{background:white;border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-icon{width:42px;height:42px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.topbar-name{font-size:16px;font-weight:800}
+.topbar-sub{font-size:12px;color:var(--text-soft);font-family:var(--mono)}
+.logout-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--text-soft);cursor:pointer;font-family:var(--font);font-weight:600}
+
+/* ── TABS ── */
+.tabs{display:flex;background:white;border-bottom:1px solid var(--border);padding:0 1.5rem;overflow-x:auto}
+.tab{padding:14px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--text-soft);font-family:var(--font);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:white;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;margin-left:6px;padding:0 4px;vertical-align:middle}
+
+/* ── CONTENT ── */
+.content{padding:1.5rem;flex:1;max-width:900px;margin:0 auto;width:100%}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow)}
+.stat-num{font-size:32px;font-weight:800;font-family:var(--mono);line-height:1}
+.stat-label{font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:6px}
+.stat-trend{font-size:12px;margin-top:4px;font-weight:600}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--text-soft);margin-bottom:1rem}
+
+/* ── PATIENT PENDING ── */
+.patient-pending{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:12px;box-shadow:var(--shadow)}
+.patient-pending-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.patient-pending-name{font-size:16px;font-weight:800}
+.patient-pending-info{font-size:12px;color:var(--text-soft);margin-top:2px}
+.patient-pending-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.detail-item{background:var(--bg);border-radius:8px;padding:8px 10px}
+.detail-label{font-size:10px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
+.detail-val{font-size:13px;font-weight:700}
+.validation-form{background:var(--orange-light);border:1.5px solid #FFD580;border-radius:var(--radius-sm);padding:1rem;margin-top:10px}
+.validation-form-title{font-size:13px;font-weight:700;color:var(--orange-dark);margin-bottom:10px}
+.val-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 
 /* ── CHIPS ── */
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px}
 .chip-ok{background:#D4EDDA;color:#155724}
-.chip-pending{background:var(--gold-light);color:#7A4500}
+.chip-pending{background:var(--orange-light);color:var(--orange-dark)}
 .chip-ko{background:var(--red-light);color:var(--red)}
-.chip-auto{background:var(--purple-light);color:var(--purple)}
-.chip-info{background:var(--blue-light);color:var(--blue)}
+.chip-auto{background:var(--purple-light);color:#4527A0}
+.chip-info{background:var(--blue-light);color:#0D47A1}
 
-/* ── CARDS ── */
-.assuré-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;box-shadow:var(--shadow)}
-.dossier-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;box-shadow:var(--shadow)}
-.dossier-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border);margin-top:8px}
+/* ── DOSSIER CARD ── */
+.dossier-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:12px;box-shadow:var(--shadow)}
+.dossier-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.dossier-patient{font-size:15px;font-weight:800}
+.dossier-hopital{font-size:12px;color:var(--text-soft);margin-bottom:4px}
+.dossier-actes{font-size:12px;color:var(--text-mid);margin:6px 0 8px}
+.dossier-montants{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:10px}
+.m-label{font-size:11px;color:var(--text-soft);margin-bottom:2px}
+.m-val{font-size:15px;font-weight:800}
+.action-zone{background:var(--bg);border-radius:var(--radius-sm);padding:1rem}
+.action-title{font-size:12px;font-weight:700;color:var(--text-mid);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
 
-/* ── PLAFOND BAR ── */
-.plafond-bar-bg{background:var(--bg);border-radius:99px;height:8px;overflow:hidden;margin:6px 0}
-.plafond-bar-fill{height:100%;border-radius:99px;transition:width .5s}
+/* ── ALERTS ── */
+.alert{padding:12px 14px;border-radius:var(--radius-sm);font-size:13px;margin-bottom:12px;line-height:1.5}
+.alert-err{background:var(--red-light);color:var(--red);border-left:3px solid var(--red)}
+.alert-ok{background:var(--green-light);color:var(--green);border-left:3px solid var(--green)}
+.alert-info{background:var(--blue-light);color:var(--blue);border-left:3px solid var(--blue)}
+.alert-warn{background:var(--orange-light);color:var(--orange-dark);border-left:3px solid var(--orange)}
+.alert-auto{background:var(--purple-light);color:var(--purple);border-left:3px solid var(--purple)}
 
-/* ── STATS ── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
-.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;text-align:center;box-shadow:var(--shadow)}
-.stat-num{font-size:26px;font-weight:800;margin-bottom:4px}
-.stat-lbl{font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+/* ── 2FA ── */
+#twofa-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1002;display:none;align-items:center;justify-content:center;padding:1rem}
+#twofa-modal.active{display:flex}
+#twofa-box{background:white;width:100%;max-width:360px;border-radius:20px;padding:2rem;text-align:center}
+.otp-input{letter-spacing:10px;font-size:24px;font-weight:700;text-align:center;width:180px;margin:0 auto 14px;border:2px solid var(--orange);border-radius:10px;padding:12px;font-family:var(--mono);display:block}
 
-/* ── FILTER BAR ── */
-.filter-bar{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
-.filter-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--card);font-family:var(--font);transition:all .2s}
+/* ── REJET MODAL ── */
+#rejet-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:none;align-items:center;justify-content:center;padding:1rem}
+#rejet-modal.active{display:flex}
+#rejet-box{background:white;width:100%;max-width:420px;border-radius:20px;padding:2rem}
+
+/* ── OVERLAY ── */
+#ov{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:14px}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:420px;text-align:center}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:3rem 1rem;color:var(--text-soft)}
-.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
-.empty-text{font-size:14px;line-height:1.6}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:0.4}
 
-/* ── OVERLAY ── */
-#ov{position:fixed;inset:0;background:rgba(255,255,255,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:900;gap:14px}
-.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--gold-mid);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-#ov-msg{font-size:14px;color:var(--text-soft);font-weight:500}
+/* ── FILTRE BTNS ── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.filter-btn{padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);background:white;color:var(--text-mid);transition:all .2s}
+.filter-btn.active{background:var(--orange);color:white;border-color:var(--orange)}
 
-/* ── TOAST ── */
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
-
-/* ── MODAL ── */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:flex-end;justify-content:center}
-.modal-backdrop.active{display:flex}
-.modal-box{background:white;width:100%;max-width:600px;border-radius:var(--radius) var(--radius) 0 0;padding:1.75rem 1.5rem;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:18px;font-weight:800;margin-bottom:4px}
-.modal-sub{font-size:13px;color:var(--text-soft);margin-bottom:1.5rem}
-
-/* ── 2FA MODAL ── */
-#twofa-modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1002;display:none;align-items:center;justify-content:center;padding:1rem}
-#twofa-modal.active{display:flex}
-#twofa-box{background:white;width:100%;max-width:380px;border-radius:20px;padding:2rem;text-align:center}
-.otp-input{letter-spacing:8px;font-size:24px;font-weight:700;text-align:center;width:180px;margin:0 auto 14px;border:2px solid var(--gold-mid);border-radius:10px;padding:12px;font-family:var(--mono);background:var(--bg);outline:none;display:block}
-
-/* ── DELAY ── */
-.delay-ok{color:var(--green);font-weight:700}
-.delay-warn{color:var(--gold-mid);font-weight:700}
-.delay-ko{color:var(--red);font-weight:700}
+@media(min-width:600px){
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+  .val-grid{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
 <div id="app">
 
 <!-- OVERLAY -->
-<div id="ov"><div class="spin"></div><div id="ov-msg">Chargement...</div></div>
+<div id="ov" style="display:none"><div class="spin"></div><div id="ov-msg">Chargement...</div></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══ 2FA MODAL ═══ -->
+<!-- ═══════════════ 2FA ═══════════════ -->
 <div id="twofa-modal">
   <div id="twofa-box">
-    <div style="font-size:28px;margin-bottom:8px">🔐</div>
-    <div style="font-size:18px;font-weight:800;margin-bottom:4px">Vérification 2 étapes</div>
-    <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Un code a été envoyé au numéro enregistré</div>
-    <div class="alert alert-warn">💡 Code de test : <strong id="twofa-hint"></strong></div>
-    <input class="otp-input" id="twofa-input" type="text" maxlength="6" placeholder="······"
-      onkeydown="if(event.key==='Enter')verify2FA()"/>
+    <div style="font-size:32px;margin-bottom:12px">🔐</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px">Vérification 2FA</div>
+    <div style="font-size:13px;color:var(--text-soft);margin-bottom:6px" id="twofa-sub">Vérification sécurisée</div>
+    <div style="background:var(--orange-light);border-radius:10px;padding:10px;margin-bottom:16px;font-size:13px;color:var(--orange-dark)">
+      Code de simulation : <strong id="twofa-hint" style="font-family:var(--mono);font-size:18px"></strong>
+    </div>
+    <input class="otp-input inp" id="twofa-input" maxlength="6" placeholder="_ _ _ _ _ _" onkeydown="if(event.key==='Enter')verify2FA()"/>
     <div id="twofa-err" class="alert alert-err" style="display:none"></div>
-    <button class="btn btn-primary" onclick="verify2FA()">Vérifier le code</button>
-    <button class="btn btn-secondary" onclick="cancel2FA()" style="margin-top:6px">Annuler</button>
+    <button class="btn btn-primary btn-block" onclick="verify2FA()" style="margin-bottom:10px">Vérifier</button>
+    <button class="btn btn-secondary btn-sm" onclick="cancel2FA()" style="margin:0 auto;display:block">Annuler</button>
   </div>
 </div>
 
-<!-- ═══ MODAL VALIDATION PATIENT ═══ -->
-<div class="modal-backdrop" id="valid-modal">
-  <div class="modal-box">
-    <div class="modal-title" id="valid-title">Valider le compte</div>
-    <div class="modal-sub" id="valid-sub"></div>
-    <label class="lbl">Type de couverture *</label>
-    <select class="inp" id="valid-type">
-      <option value="AMO Standard">AMO Standard</option>
-      <option value="AMO Basique">AMO Basique</option>
-      <option value="AMO Premium">AMO Premium</option>
-      <option value="RAMU">RAMU</option>
-      <option value="RAMU Plus">RAMU Plus</option>
-      <option value="Privée">Privée</option>
+<!-- ═══════════════ REJET MODAL ═══════════════ -->
+<div id="rejet-modal">
+  <div id="rejet-box">
+    <div style="font-size:18px;font-weight:800;margin-bottom:6px">❌ Rejeter le dossier</div>
+    <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Indiquez le motif de rejet (visible par le patient et l'hôpital)</div>
+    <label class="lbl">Motif du rejet *</label>
+    <select class="inp" id="rejet-motif">
+      <option value="">Sélectionner un motif</option>
+      <option>Acte non couvert par le contrat</option>
+      <option>Plafond annuel atteint</option>
+      <option>Documents manquants</option>
+      <option>Dossier incomplet</option>
+      <option>Délai de déclaration dépassé</option>
+      <option>Fraude suspectée</option>
+      <option>Autre motif</option>
     </select>
-    <label class="lbl">Taux de remboursement (%) *</label>
-    <input class="inp" id="valid-taux" type="number" min="0" max="100" placeholder="Ex : 80"/>
-    <label class="lbl">Plafond annuel (FCFA) *</label>
-    <input class="inp" id="valid-plafond" type="number" placeholder="Ex : 200000"/>
-    <label class="lbl">Décision *</label>
-    <select class="inp" id="valid-statut">
-      <option value="actif">✅ Valider le compte</option>
-      <option value="rejete">❌ Rejeter la demande</option>
-    </select>
-    <div id="valid-err" class="alert alert-err" style="display:none"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeValidModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveValidation()">Confirmer</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL MODIFICATION ASSURÉ ═══ -->
-<div class="modal-backdrop" id="edit-modal">
-  <div class="modal-box">
-    <div class="modal-title" id="edit-title">Modifier la couverture</div>
-    <div class="modal-sub" id="edit-sub"></div>
-    <label class="lbl">Type de couverture</label>
-    <select class="inp" id="edit-type">
-      <option value="AMO Standard">AMO Standard</option>
-      <option value="AMO Basique">AMO Basique</option>
-      <option value="AMO Premium">AMO Premium</option>
-      <option value="RAMU">RAMU</option>
-      <option value="RAMU Plus">RAMU Plus</option>
-      <option value="Privée">Privée</option>
-    </select>
-    <label class="lbl">Taux de remboursement (%)</label>
-    <input class="inp" id="edit-taux" type="number" min="0" max="100"/>
-    <label class="lbl">Plafond annuel (FCFA)</label>
-    <input class="inp" id="edit-plafond" type="number"/>
-    <label class="lbl">Statut du compte</label>
-    <select class="inp" id="edit-statut">
-      <option value="actif">✅ Maintenir actif</option>
-      <option value="suspendu">⏸️ Suspendre</option>
-      <option value="rejete">❌ Désactiver</option>
-    </select>
-    <div id="edit-err" class="alert alert-err" style="display:none"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEdit()">Enregistrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL REMBOURSEMENT ═══ -->
-<div class="modal-backdrop" id="remb-modal">
-  <div class="modal-box">
-    <div class="modal-title">💸 Traiter le remboursement</div>
-    <div class="modal-sub" id="remb-sub"></div>
-    <div class="alert alert-info" id="remb-info"></div>
-    <label class="lbl">Montant du remboursement (FCFA) *</label>
-    <input class="inp" id="remb-montant" type="number" placeholder="Ex : 20000"/>
-    <label class="lbl">Décision *</label>
-    <select class="inp" id="remb-decision">
-      <option value="validé">✅ Valider le remboursement</option>
-      <option value="rejeté">❌ Rejeter le dossier</option>
-    </select>
-    <div id="remb-err" class="alert alert-err" style="display:none"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeRembModal()">Annuler</button>
-      <button class="btn btn-green" onclick="saveRemb()">Confirmer</button>
+    <label class="lbl">Commentaire (optionnel)</label>
+    <input class="inp" id="rejet-comment" placeholder="Précisions supplémentaires..."/>
+    <div id="rejet-err" class="alert alert-err" style="display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-secondary" onclick="closeRejet()" style="flex:1">Annuler</button>
+      <button class="btn btn-red" onclick="confirmRejet()" style="flex:2">Confirmer le rejet</button>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ LOGIN ═══════════════ -->
 <div id="s-login" class="screen active">
-  <div class="header">
-    <div style="font-size:36px;margin-bottom:8px">🛡️</div>
-    <div class="header-logo">Alafia Care — Assurance</div>
-    <div class="header-sub">Espace réservé aux compagnies d'assurance</div>
-    <div class="header-wave"></div>
-  </div>
-  <div class="content" style="max-width:480px;margin:0 auto;width:100%">
-    <div class="form-card">
-      <div class="form-title">Connexion sécurisée</div>
-      <div class="form-sub">Entrez vos identifiants de compagnie</div>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">Alafia Care</div>
+      <div class="login-title">🛡️ Espace Assurance</div>
+      <div class="login-sub">Accès réservé aux gestionnaires de compagnies d'assurance</div>
       <label class="lbl">Email de la compagnie</label>
-      <input class="inp" id="login-email" type="email" placeholder="assurance.alafia@alafiacare.bj"
-        onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()"/>
+      <input class="inp" id="login-email" type="email" placeholder="assurance.sobac@alafiacare.bj" onkeydown="if(event.key==='Enter')doLogin()"/>
       <label class="lbl">Mot de passe</label>
-      <input class="inp" id="login-pw" type="password" placeholder="••••••••"
-        onkeydown="if(event.key==='Enter')doLogin()"/>
+      <input class="inp" id="login-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
       <div id="login-err" class="alert alert-err" style="display:none"></div>
-      <button class="btn btn-primary btn-icon" onclick="doLogin()">
-        <span>🔑</span><span>Accéder au dashboard</span>
-      </button>
-    </div>
-    <div style="text-align:center;font-size:11px;color:var(--text-soft);font-family:var(--mono);margin-top:1rem">
-      Alafia Care MVP v1.0 — Parakou, Bénin
+      <button class="btn btn-primary btn-block" onclick="doLogin()">Accéder au dashboard →</button>
+      <div style="text-align:center;margin-top:1rem;font-size:11px;color:var(--text-soft)">Contactez l'administration Alafia Care pour obtenir vos accès</div>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ DASHBOARD ═══════════════ -->
 <div id="s-dash" class="screen">
+  <!-- TOPBAR -->
   <div class="topbar">
-    <div>
-      <div class="topbar-name" id="dash-nom"></div>
-      <div class="topbar-sub" id="dash-ville"></div>
+    <div class="topbar-left">
+      <div class="topbar-icon">🛡️</div>
+      <div>
+        <div class="topbar-name" id="dash-assurance-nom">Assurance</div>
+        <div class="topbar-sub" id="dash-assurance-ville"></div>
+      </div>
     </div>
     <button class="logout-btn" onclick="doLogout()">Déconnexion</button>
   </div>
 
+  <!-- TABS -->
   <div class="tabs">
-    <div class="tab-btn-wrap">
-      <button class="tab-btn active" id="tab-attente" onclick="switchTab('attente')">⏳ En attente</button>
-      <div class="notif-badge" id="badge-attente"></div>
-    </div>
-    <div class="tab-btn-wrap">
-      <button class="tab-btn" id="tab-assures" onclick="switchTab('assures')">👥 Mes assurés</button>
-    </div>
-    <div class="tab-btn-wrap">
-      <button class="tab-btn" id="tab-dossiers" onclick="switchTab('dossiers')">📋 Dossiers</button>
-      <div class="notif-badge" id="badge-dossiers"></div>
-    </div>
-    <div class="tab-btn-wrap">
-      <button class="tab-btn" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
-    </div>
+    <button class="tab active" id="tab-attente" onclick="switchTab('attente')">
+      ⏳ En attente <span id="badge-attente" class="tab-badge" style="display:none">0</span>
+    </button>
+    <button class="tab" id="tab-assures" onclick="switchTab('assures')">
+      👥 Patients assurés <span id="badge-assures" class="tab-badge" style="display:none">0</span>
+    </button>
+    <button class="tab" id="tab-dossiers" onclick="switchTab('dossiers')">
+      📋 Dossiers <span id="badge-dossiers" class="tab-badge" style="display:none">0</span>
+    </button>
+    <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
-  <!-- ── EN ATTENTE ── -->
+  <!-- ── ONGLET EN ATTENTE (patients à valider) ── -->
   <div id="pane-attente" style="flex:1;overflow-y:auto">
-    <div class="content"><div id="list-attente"></div></div>
+    <div class="content" id="attente-list"></div>
   </div>
 
-  <!-- ── MES ASSURÉS ── -->
+  <!-- ── ONGLET PATIENTS ASSURÉS ── -->
   <div id="pane-assures" style="display:none;flex:1;overflow-y:auto">
-    <div class="content"><div id="list-assures"></div></div>
+    <div class="content">
+      <div class="filter-row">
+        <button class="filter-btn active" id="fa-tous" onclick="filterAssures('tous')">Tous</button>
+        <button class="filter-btn" id="fa-valide" onclick="filterAssures('valide')">Validés</button>
+        <button class="filter-btn" id="fa-rejete" onclick="filterAssures('rejete')">Rejetés</button>
+      </div>
+      <div id="assures-list"></div>
+    </div>
   </div>
 
-  <!-- ── DOSSIERS ── -->
+  <!-- ── ONGLET DOSSIERS ── -->
   <div id="pane-dossiers" style="display:none;flex:1;overflow-y:auto">
     <div class="content">
-      <div class="filter-bar" id="filter-bar"></div>
-      <div id="list-dossiers"></div>
+      <div class="filter-row">
+        <button class="filter-btn active" id="fd-tous" onclick="filterDossiers('tous')">Tous</button>
+        <button class="filter-btn" id="fd-attente" onclick="filterDossiers('en attente')">En attente</button>
+        <button class="filter-btn" id="fd-valide" onclick="filterDossiers('validé')">Validés</button>
+        <button class="filter-btn" id="fd-rejete" onclick="filterDossiers('rejeté')">Rejetés</button>
+      </div>
+      <div id="dossiers-list"></div>
     </div>
   </div>
 
-  <!-- ── STATS ── -->
+  <!-- ── ONGLET STATS ── -->
   <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
     <div class="content">
       <div class="stats-grid" id="stats-grid"></div>
-      <div id="stats-details"></div>
+      <div id="stats-detail"></div>
     </div>
   </div>
 </div>
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getFirestore,collection,getDocs,doc,updateDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getAuth,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app=initializeApp({
   apiKey:"AIzaSyAT5wcCQJ1dqzJZ1y6WAwXdGd10QX9oM5Y",
@@ -362,18 +319,11 @@ const db=getFirestore(app);
 const auth=getAuth(app);
 
 // ── STATE ──
-let assureurProfile=null;
-let twoFACode=null;
-let validDocId=null;
-let validCurrentAlafiaId=null;
-let editDocId=null;
-let editCurrentAlafiaId=null;
-let rembDocId=null;
-let dosFilter="en attente";
-let patientsCache=[];
-let dossiersCache=[];
-let patientsListener=null;
-let dossiersListener=null;
+let currentAssurance=null;
+let twoFACode=null,twoFAPending=null;
+let rejetDocId=null;
+let dosFilter="tous",assuresFilter="tous";
+let unsubPts=null,unsubDos=null;
 
 // ── HELPERS ──
 const $=id=>document.getElementById(id);
@@ -383,506 +333,417 @@ const fdate=ts=>{
   const d=ts.toDate?ts.toDate():new Date(ts);
   return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
 };
-const genId=()=>"AL-"+Math.random().toString(36).substr(2,6).toUpperCase();
 const showOv=msg=>{$("ov").style.display="flex";$("ov-msg").textContent=msg||"Chargement..."};
 const hideOv=()=>$("ov").style.display="none";
 const showToast=(msg,color="#1A1A2E")=>{
   const t=$("toast");t.textContent=msg;t.style.background=color;t.style.opacity="1";
   setTimeout(()=>t.style.opacity="0",3500);
 };
-const showErr=(id,msg)=>{const e=$(id);if(e){e.textContent=msg;e.style.display="block"}};
-const hideErr=id=>{const e=$(id);if(e)e.style.display="none"};
-const go=id=>{
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $(id).classList.add("active");window.scrollTo(0,0);
-};
-const delayCls=createdAt=>{
-  const c=createdAt?.toDate?createdAt.toDate():new Date(createdAt||0);
-  const h=Math.round((Date.now()-c)/36e5);
-  if(h<48)return{cls:"delay-ok",txt:"< 48h ✓"};
-  if(h<72)return{cls:"delay-warn",txt:`${h}h ⚠`};
-  return{cls:"delay-ko",txt:`${h}h ✗`};
-};
 
-// ── TABS ──
+// ── NAVIGATION ──
 window.switchTab=tab=>{
   ["attente","assures","dossiers","stats"].forEach(t=>{
     $("pane-"+t).style.display=t===tab?"flex":"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
-  if(tab==="attente")renderAttente();
-  if(tab==="assures")renderAssures();
-  if(tab==="dossiers"){dosFilter="en attente";renderFilterBar();renderDossiers();}
-  if(tab==="stats")renderStats();
+  if(tab==="attente") renderAttente();
+  if(tab==="assures") renderAssures();
+  if(tab==="dossiers") renderDossiers();
+  if(tab==="stats") renderStats();
 };
 
 // ── LOGIN ──
 window.doLogin=async()=>{
   const email=$("login-email").value.trim();
   const pw=$("login-pw").value;
-  hideErr("login-err");
-  if(!email||!pw){showErr("login-err","Entrez votre email et mot de passe.");return;}
-  showOv("Connexion...");
+  $("login-err").style.display="none";
+  if(!email||!pw){$("login-err").textContent="Remplissez tous les champs.";$("login-err").style.display="block";return;}
+  showOv("Vérification...");
   try{
     await signInWithEmailAndPassword(auth,email,pw);
-    const snap=await getDocs(query(collection(db,"assureurs"),where("email","==",email)));
-    if(snap.empty){
-      await signOut(auth);hideOv();
-      showErr("login-err","Aucun profil assureur trouvé pour cet email.");return;
-    }
-    assureurProfile={...snap.docs[0].data(),_id:snap.docs[0].id};
     hideOv();
-    show2FA();
+    const snap=await getDocs(query(collection(db,"assurances"),where("email","==",email)));
+    if(snap.empty){
+      await signOut(auth);
+      $("login-err").textContent="Aucune compagnie trouvée pour cet email. Contactez l'administration.";
+      $("login-err").style.display="block";
+      return;
+    }
+    const data={...snap.docs[0].data(),_id:snap.docs[0].id};
+    show2FA(data);
   }catch(e){
     hideOv();
-    showErr("login-err","Email ou mot de passe incorrect.");
     $("login-pw").value="";
+    $("login-err").textContent="Email ou mot de passe incorrect.";
+    $("login-err").style.display="block";
   }
 };
 
 // ── 2FA ──
-function show2FA(){
+function show2FA(data){
   twoFACode=Math.floor(100000+Math.random()*900000).toString();
+  twoFAPending=data;
   $("twofa-hint").textContent=twoFACode;
+  $("twofa-sub").textContent="Vérification — "+data.nom;
   $("twofa-input").value="";
-  hideErr("twofa-err");
+  $("twofa-err").style.display="none";
   $("twofa-modal").classList.add("active");
   setTimeout(()=>$("twofa-input").focus(),200);
 }
+
 window.verify2FA=()=>{
-  if($("twofa-input").value.trim()!==twoFACode){
-    showErr("twofa-err","Code incorrect.");return;
-  }
+  const v=$("twofa-input").value.trim();
+  if(v!==twoFACode){$("twofa-err").textContent="Code incorrect.";$("twofa-err").style.display="block";return;}
   $("twofa-modal").classList.remove("active");
-  twoFACode=null;
-  showToast("✅ Connexion 2FA réussie","#C47A00");
-  initDashboard();
+  currentAssurance=twoFAPending;
+  twoFAPending=null;twoFACode=null;
+  showToast("✅ Connexion sécurisée — "+currentAssurance.nom,"#0A7C5C");
+  initDash();
 };
+
 window.cancel2FA=async()=>{
   $("twofa-modal").classList.remove("active");
-  await signOut(auth);assureurProfile=null;
+  twoFAPending=null;twoFACode=null;
+  await signOut(auth);
 };
 
 // ── INIT DASHBOARD ──
-function initDashboard(){
-  $("dash-nom").textContent=assureurProfile.nom||"Assurance";
-  $("dash-ville").textContent="📍 "+(assureurProfile.ville||"");
+function initDash(){
+  $("dash-assurance-nom").textContent=currentAssurance.nom;
+  $("dash-assurance-ville").textContent=currentAssurance.ville||"";
   go("s-dash");
+  // Listeners temps réel
   startListeners();
   switchTab("attente");
 }
 
-function startListeners(){
-  // Listener patients
-  if(patientsListener)patientsListener();
-  patientsListener=onSnapshot(collection(db,"patients"),snap=>{
-    patientsCache=snap.docs.map(d=>({...d.data(),_id:d.id}));
-    const pending=patientsCache.filter(p=>p.statut==="en_attente"||(!p.alafiaId&&p.statut!=="rejete"));
-    const badge=$("badge-attente");
-    if(pending.length>0){
-      badge.textContent=pending.length;badge.style.display="flex";
-    }else badge.style.display="none";
-  });
+function go(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+}
 
-  // Listener dossiers (filtrés par assureurEmail)
-  if(dossiersListener)dossiersListener();
-  const q=query(collection(db,"dossiers"),where("assureurEmail","==",assureurProfile.email));
-  dossiersListener=onSnapshot(q,snap=>{
-    dossiersCache=snap.docs.map(d=>({...d.data(),_id:d.id}))
-      .sort((a,b)=>{
-        const ta=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);
-        const tb=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);
-        return tb-ta;
-      });
-    const pending=dossiersCache.filter(d=>d.statut==="en attente").length;
-    const badge=$("badge-dossiers");
-    if(pending>0){badge.textContent=pending;badge.style.display="flex";}
-    else badge.style.display="none";
-    if(dossiersCache.length>0)showToast("🔔 Dossiers mis à jour","#C47A00");
+function startListeners(){
+  // Patients en attente
+  if(unsubPts)unsubPts();
+  unsubPts=onSnapshot(query(collection(db,"patients"),where("statut","==","en_attente"),where("compagnie","==",currentAssurance.nom)),snap=>{
+    const n=snap.docs.length;
+    $("badge-attente").textContent=n;
+    $("badge-attente").style.display=n>0?"inline-flex":"none";
+  });
+  // Dossiers en attente
+  if(unsubDos)unsubDos();
+  unsubDos=onSnapshot(query(collection(db,"dossiers"),where("statut","==","en attente"),where("assuranceCompagnie","==",currentAssurance.nom)),snap=>{
+    const n=snap.docs.length;
+    $("badge-dossiers").textContent=n;
+    $("badge-dossiers").style.display=n>0?"inline-flex":"none";
+    if(snap.docChanges().filter(c=>c.type==="added").length>0)
+      showToast("🔔 Nouveau dossier reçu d'un hôpital","#E07B00");
   });
 }
 
-// ── LOGOUT ──
 window.doLogout=async()=>{
-  if(patientsListener){patientsListener();patientsListener=null;}
-  if(dossiersListener){dossiersListener();dossiersListener=null;}
+  if(unsubPts){unsubPts();unsubPts=null;}
+  if(unsubDos){unsubDos();unsubDos=null;}
+  currentAssurance=null;
   await signOut(auth);
-  assureurProfile=null;patientsCache=[];dossiersCache=[];
   go("s-login");
 };
 
-// ═══════════════════════════════════════════
-// ── EN ATTENTE ──
-// ═══════════════════════════════════════════
-function renderAttente(){
-  const pending=patientsCache.filter(p=>
-    p.statut==="en_attente"||(!p.alafiaId&&p.statut!=="rejete"&&p.statut!=="actif")
-  );
-  const el=$("list-attente");
-  if(pending.length===0){
-    el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Aucune demande en attente de validation.</div></div>';
+// ══════════════════════════════════════════
+// ── ONGLET 1 : PATIENTS EN ATTENTE
+// ══════════════════════════════════════════
+async function renderAttente(){
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"patients"),where("statut","==","en_attente"),where("compagnie","==",currentAssurance.nom)));
+  hideOv();
+  const pts=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  if(pts.length===0){
+    $("attente-list").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div style="font-size:14px;font-weight:600">Aucun patient en attente</div><div style="font-size:13px;margin-top:6px">Tous les dossiers ont été traités.</div></div>';
     return;
   }
-  el.innerHTML=pending.map(p=>`
-    <div class="assuré-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+  $("attente-list").innerHTML=pts.map(p=>`
+    <div class="patient-pending" id="pp-${p._id}">
+      <div class="patient-pending-head">
         <div>
-          <div style="font-size:16px;font-weight:800">${p.prenom} ${p.nom}</div>
-          <div style="font-size:12px;color:var(--text-soft)">${p.tel}</div>
-          ${p.ddn?`<div style="font-size:12px;color:var(--text-soft)">Né(e) le ${p.ddn}</div>`:""}
+          <div class="patient-pending-name">${p.prenom} ${p.nom}</div>
+          <div class="patient-pending-info">${p.tel} ${p.npi?"· NPI : "+p.npi:""}</div>
         </div>
-        <span class="chip chip-pending">En attente</span>
+        <span class="chip chip-pending">⏳ En attente</span>
       </div>
-      ${p.compagnie?`<div style="font-size:13px;margin-bottom:4px">🏢 Assurance déclarée : <strong>${p.compagnie}</strong></div>`:""}
-      ${p.police?`<div style="font-size:13px;margin-bottom:4px">📋 N° police : <strong>${p.police}</strong></div>`:""}
-      ${p.groupeSanguin?`<div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">🩸 Groupe : ${p.groupeSanguin}</div>`:""}
-      <div style="font-size:11px;color:var(--text-soft);margin-bottom:12px">Demande le ${fdate(p.createdAt)}</div>
-      <button class="btn btn-primary btn-icon" onclick="openValidModal('${p._id}','${p.prenom} ${p.nom}','${p.tel}',null)">
-        <span>✅</span><span>Valider / Rejeter ce compte</span>
-      </button>
+      <div class="patient-pending-details">
+        ${p.ddn?`<div class="detail-item"><div class="detail-label">Date de naissance</div><div class="detail-val">${p.ddn}</div></div>`:""}
+        <div class="detail-item"><div class="detail-label">Compagnie</div><div class="detail-val">${p.compagnie||"—"}</div></div>
+        ${p.police?`<div class="detail-item"><div class="detail-label">N° Police</div><div class="detail-val">${p.police}</div></div>`:""}
+        ${p.momo?`<div class="detail-item"><div class="detail-label">MoMo MTN</div><div class="detail-val">${p.momo}</div></div>`:""}
+        ${p.groupeSanguin?`<div class="detail-item"><div class="detail-label">Groupe sanguin</div><div class="detail-val">${p.groupeSanguin}</div></div>`:""}
+        ${p.allergies?`<div class="detail-item" style="grid-column:1/-1"><div class="detail-label">Allergies</div><div class="detail-val">${p.allergies}</div></div>`:""}
+      </div>
+
+      <!-- Formulaire de validation -->
+      <div class="validation-form" id="vf-${p._id}">
+        <div class="validation-form-title">⚙️ Paramètres d'assurance</div>
+        <div class="val-grid">
+          <div>
+            <label class="lbl">Type de contrat</label>
+            <select class="inp" id="vf-type-${p._id}" style="margin-bottom:0">
+              <option value="AMO">AMO (Assurance Maladie Obligatoire)</option>
+              <option value="AMV">AMV (Assurance Maladie Volontaire)</option>
+              <option value="INAM">INAM</option>
+              <option value="Privé">Contrat Privé</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Taux de couverture (%)</label>
+            <input class="inp" type="number" id="vf-taux-${p._id}" placeholder="Ex: 80" min="1" max="100" style="margin-bottom:0"/>
+          </div>
+          <div>
+            <label class="lbl">Plafond annuel (FCFA)</label>
+            <input class="inp" type="number" id="vf-plafond-${p._id}" placeholder="Ex: 500000" style="margin-bottom:0"/>
+          </div>
+        </div>
+        <div id="vf-err-${p._id}" class="alert alert-err" style="display:none;margin-top:8px"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-red btn-sm" onclick="rejeterPatient('${p._id}','${p.prenom} ${p.nom}')">✕ Rejeter</button>
+          <button class="btn btn-green" onclick="validerPatient('${p._id}')" style="flex:1">✓ Valider et activer</button>
+        </div>
+      </div>
     </div>`).join("");
 }
 
-// ── MODAL VALIDATION ──
-window.openValidModal=(docId,name,tel,alafiaId)=>{
-  validDocId=docId;
-  validCurrentAlafiaId=alafiaId||null;
-  $("valid-title").textContent="Valider le compte";
-  $("valid-sub").textContent=name+" — "+tel;
-  $("valid-type").value="AMO Standard";
-  $("valid-taux").value="80";
-  $("valid-plafond").value="200000";
-  $("valid-statut").innerHTML=`
-    <option value="actif">✅ Valider le compte</option>
-    <option value="rejete">❌ Rejeter la demande</option>`;
-  hideErr("valid-err");
-  $("valid-modal").classList.add("active");
-};
-window.closeValidModal=()=>$("valid-modal").classList.remove("active");
-
-window.saveValidation=async()=>{
-  const type=$("valid-type").value;
-  const taux=parseInt($("valid-taux").value);
-  const plafond=parseInt($("valid-plafond").value);
-  const statut=$("valid-statut").value;
-  hideErr("valid-err");
-  if(statut==="actif"&&(!type||!taux||!plafond)){
-    showErr("valid-err","Remplissez tous les champs pour valider.");return;
-  }
-  showOv("Mise à jour...");
-  try{
-    const updates={statut,updatedAt:new Date()};
-    if(statut==="actif"){
-      updates.assuranceValide=true;
-      updates.assuranceType=type;
-      updates.assuranceTaux=taux;
-      updates.assurancePlafond=plafond;
-      updates.assureurEmail=assureurProfile.email;
-      updates.assureurNom=assureurProfile.nom;
-      updates.alafiaId=validCurrentAlafiaId||genId();
-    }else{
-      updates.assuranceValide=false;
-      updates.assureurEmail=assureurProfile.email;
-    }
-    await updateDoc(doc(db,"patients",validDocId),updates);
-    closeValidModal();
-    showToast(statut==="actif"?"✅ Compte validé avec succès":"❌ Demande rejetée","#C47A00");
-    renderAttente();
-  }catch(e){
-    showErr("valid-err","Erreur. Vérifiez votre connexion.");
-  }finally{hideOv();}
+window.validerPatient=async(id)=>{
+  const type=$("vf-type-"+id)?.value;
+  const taux=parseInt($("vf-taux-"+id)?.value);
+  const plafond=parseInt($("vf-plafond-"+id)?.value);
+  const errEl=$("vf-err-"+id);
+  errEl.style.display="none";
+  if(!taux||taux<1||taux>100){errEl.textContent="Entrez un taux valide (1-100%).";errEl.style.display="block";return;}
+  if(!plafond||plafond<1){errEl.textContent="Entrez un plafond annuel valide.";errEl.style.display="block";return;}
+  showOv("Validation en cours...");
+  const alafiaId="AL-"+Math.random().toString(36).substr(2,6).toUpperCase();
+  await updateDoc(doc(db,"patients",id),{
+    statut:"validé",
+    assuranceValide:true,
+    assuranceType:type,
+    assuranceTaux:taux,
+    assurancePlafond:plafond,
+    alafiaId,
+    validatedAt:new Date(),
+    validatedBy:currentAssurance.nom
+  });
+  hideOv();
+  const el=$("pp-"+id);
+  if(el) el.remove();
+  showToast("✅ Patient validé — ID Alafia : "+alafiaId,"#0A7C5C");
+  // Mise à jour badge
+  const rem=document.querySelectorAll('[id^="pp-"]').length;
+  $("badge-attente").textContent=rem;
+  $("badge-attente").style.display=rem>0?"inline-flex":"none";
+  if(rem===0) $("attente-list").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div style="font-size:14px;font-weight:600">Aucun patient en attente</div></div>';
 };
 
-// ═══════════════════════════════════════════
-// ── MES ASSURÉS ──
-// ═══════════════════════════════════════════
+window.rejeterPatient=async(id,nom)=>{
+  if(!confirm("Rejeter la demande de "+nom+" ?")) return;
+  showOv("Rejet en cours...");
+  await updateDoc(doc(db,"patients",id),{statut:"rejete",assuranceValide:false,rejectedAt:new Date(),rejectedBy:currentAssurance.nom});
+  hideOv();
+  const el=$("pp-"+id);
+  if(el) el.remove();
+  showToast("Demande de "+nom+" rejetée.","#D63031");
+};
+
+// ══════════════════════════════════════════
+// ── ONGLET 2 : PATIENTS ASSURÉS
+// ══════════════════════════════════════════
+let assuresFilterCurrent="tous";
+window.filterAssures=f=>{
+  assuresFilterCurrent=f;
+  ["tous","valide","rejete"].forEach(x=>{
+    $("fa-"+x)?.classList.toggle("active",x===f);
+  });
+  renderAssures();
+};
+
 async function renderAssures(){
-  const assures=patientsCache.filter(p=>p.assureurEmail===assureurProfile.email&&p.statut==="actif");
-  const el=$("list-assures");
-  if(assures.length===0){
-    el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Aucun assuré validé pour le moment.</div></div>';
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"patients"),where("compagnie","==",currentAssurance.nom)));
+  hideOv();
+  let pts=snap.docs.map(d=>({...d.data(),_id:d.id})).filter(p=>p.statut!=="en_attente");
+  if(assuresFilterCurrent==="valide") pts=pts.filter(p=>p.assuranceValide);
+  if(assuresFilterCurrent==="rejete") pts=pts.filter(p=>p.statut==="rejete");
+  if(pts.length===0){
+    $("assures-list").innerHTML='<div class="empty"><div class="empty-icon">👥</div><div style="font-size:14px">Aucun patient trouvé</div></div>';
     return;
   }
-  const annee=new Date().getFullYear();
-  el.innerHTML=assures.map(p=>{
-    const pdos=dossiersCache.filter(d=>d.patientId===p.alafiaId);
-    const consomme=pdos.filter(d=>d.statut==="validé"&&d.remboursement&&
-      (d.createdAt?.toDate?d.createdAt.toDate():new Date(d.createdAt||0)).getFullYear()===annee)
-      .reduce((s,d)=>s+(d.remboursement||0),0);
-    const plafond=p.assurancePlafond||0;
-    const pct=plafond>0?Math.min(Math.round(consomme/plafond*100),100):0;
-    const reste=Math.max(plafond-consomme,0);
-    const barColor=pct>=90?"var(--red)":pct>=70?"var(--gold-mid)":"var(--green)";
-    return`
-    <div class="assuré-card">
+  $("assures-list").innerHTML=pts.map(p=>`
+    <div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
-          <div style="font-size:16px;font-weight:800">${p.prenom} ${p.nom}</div>
-          <div style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700">${p.alafiaId}</div>
-          <div style="font-size:12px;color:var(--text-soft)">${p.tel}</div>
+          <div style="font-size:15px;font-weight:800">${p.prenom} ${p.nom}</div>
+          <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId||"—"} · ${p.tel}</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-          <span class="chip chip-ok">✓ Actif</span>
-          <span class="chip chip-auto">⚡ ${p.assuranceType}</span>
-        </div>
+        <span class="chip chip-${p.assuranceValide?"ok":"ko"}">${p.assuranceValide?"✓ Actif":"✕ Rejeté"}</span>
       </div>
-      <div style="font-size:13px;color:var(--purple);margin-bottom:10px">
-        ${p.assuranceTaux}% remboursé · Plafond ${fmt(plafond)} FCFA
-      </div>
-      ${plafond>0?`
-      <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-          <span style="color:var(--text-soft)">Plafond utilisé</span>
-          <strong style="color:${barColor}">${pct}%</strong>
-        </div>
-        <div class="plafond-bar-bg">
-          <div class="plafond-bar-fill" style="width:${pct}%;background:${barColor}"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px">
-          <span>${fmt(consomme)} FCFA utilisés</span>
-          <span style="color:var(--green)">${fmt(reste)} FCFA restants</span>
-        </div>
-        ${pct>=90?'<div class="alert alert-err" style="margin-top:8px;margin-bottom:0;font-size:12px">🚨 Plafond presque atteint</div>':""}
-      </div>`:""
-      }
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--text-soft)">${pdos.length} dossier(s)</span>
-        <button class="btn btn-secondary btn-sm"
-          onclick="openEditModal('${p._id}','${p.prenom} ${p.nom}','${p.alafiaId}','${p.assuranceType}',${p.assuranceTaux},${p.assurancePlafond})">
-          ✏️ Modifier
-        </button>
-      </div>
-    </div>`;
-  }).join("");
+      ${p.assuranceValide?`
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <span class="chip chip-auto">⚡ ${p.assuranceType||"—"}</span>
+        <span class="chip chip-info">${p.assuranceTaux||"—"}% couvert</span>
+        <span class="chip chip-ok">Plafond ${fmt(p.assurancePlafond)} FCFA</span>
+      </div>`:""}
+    </div>`).join("");
 }
 
-// ── MODAL MODIFICATION ──
-window.openEditModal=(docId,name,alafiaId,type,taux,plafond)=>{
-  editDocId=docId;editCurrentAlafiaId=alafiaId;
-  $("edit-title").textContent="Modifier la couverture";
-  $("edit-sub").textContent=name+" — "+alafiaId;
-  $("edit-type").value=type||"AMO Standard";
-  $("edit-taux").value=taux||80;
-  $("edit-plafond").value=plafond||200000;
-  $("edit-statut").value="actif";
-  hideErr("edit-err");
-  $("edit-modal").classList.add("active");
-};
-window.closeEditModal=()=>$("edit-modal").classList.remove("active");
-window.saveEdit=async()=>{
-  const type=$("edit-type").value;
-  const taux=parseInt($("edit-taux").value);
-  const plafond=parseInt($("edit-plafond").value);
-  const statut=$("edit-statut").value;
-  hideErr("edit-err");
-  showOv("Mise à jour...");
-  try{
-    const updates={statut,updatedAt:new Date(),alafiaId:editCurrentAlafiaId};
-    if(statut==="actif"){
-      updates.assuranceValide=true;
-      updates.assuranceType=type;
-      updates.assuranceTaux=taux;
-      updates.assurancePlafond=plafond;
-    }else{
-      updates.assuranceValide=false;
-    }
-    await updateDoc(doc(db,"patients",editDocId),updates);
-    closeEditModal();
-    showToast("✅ Couverture mise à jour","#C47A00");
-    renderAssures();
-  }catch(e){showErr("edit-err","Erreur. Vérifiez votre connexion.");}
-  finally{hideOv();}
+// ══════════════════════════════════════════
+// ── ONGLET 3 : DOSSIERS MÉDICAUX
+// ══════════════════════════════════════════
+let dosFilterCurrent="tous";
+window.filterDossiers=f=>{
+  dosFilterCurrent=f;
+  ["tous","attente","valide","rejete"].forEach(x=>{
+    const map={"tous":"tous","attente":"en attente","valide":"validé","rejete":"rejeté"};
+    $("fd-"+x)?.classList.toggle("active",map[x]===f||x===f);
+  });
+  renderDossiers();
 };
 
-// ═══════════════════════════════════════════
-// ── DOSSIERS ──
-// ═══════════════════════════════════════════
-function renderFilterBar(){
-  const filters=[
-    {k:"en attente",l:"⏳ En attente",c:"#7A4500"},
-    {k:"validé",l:"✅ Validés",c:"var(--green)"},
-    {k:"rejeté",l:"❌ Rejetés",c:"var(--red)"},
-    {k:"tous",l:"Tous",c:"var(--blue)"},
-  ];
-  $("filter-bar").innerHTML=filters.map(f=>`
-    <button class="filter-btn" id="fb-${f.k.replace(" ","-")}"
-      onclick="setFilter('${f.k}')"
-      style="${dosFilter===f.k?`background:${f.c};color:white;border-color:${f.c}`:""}">
-      ${f.l}
-    </button>`).join("");
-}
-window.setFilter=f=>{dosFilter=f;renderFilterBar();renderDossiers();};
-
-function renderDossiers(){
-  // Récupérer aussi les dossiers des patients de cet assureur qui n'ont pas encore assureurEmail
-  // (dossiers créés avant le champ assureurEmail)
-  const myPatientIds=patientsCache
-    .filter(p=>p.assureurEmail===assureurProfile.email)
-    .map(p=>p.alafiaId).filter(Boolean);
-
-  // Fusionner : dossiers avec assureurEmail OU dont le patient appartient à cet assureur
-  const allDos=[...new Map(
-    [...dossiersCache,
-     ...patientsCache.filter(p=>myPatientIds.includes(p.alafiaId))
-       .flatMap(()=>[]) // placeholder, dossiersCache déjà filtré par listener
-    ].map(d=>[d._id,d])
-  ).values()];
-
-  // Compléter avec les dossiers des patients de cet assureur (sans assureurEmail)
-  const extraPatientIds=myPatientIds;
-
-  const filtered=(dosFilter==="tous"?dossiersCache:dossiersCache.filter(d=>d.statut===dosFilter));
-  const el=$("list-dossiers");
-  if(filtered.length===0){
-    el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aucun dossier dans cette catégorie.</div></div>';
+async function renderDossiers(){
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("assuranceCompagnie","==",currentAssurance.nom)));
+  hideOv();
+  let dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  if(dosFilterCurrent!=="tous") dos=dos.filter(d=>d.statut===dosFilterCurrent);
+  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  if(dos.length===0){
+    $("dossiers-list").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Aucun dossier trouvé</div></div>';
     return;
   }
-  el.innerHTML=filtered.map(d=>{
-    const dl=d.statut==="en attente"?delayCls(d.createdAt):null;
-    return`
-    <div class="dossier-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-        <div style="font-size:15px;font-weight:800">${d.patientNom}</div>
+  $("dossiers-list").innerHTML=dos.map(d=>`
+    <div class="dossier-card" id="dc-${d._id}">
+      <div class="dossier-head">
+        <div>
+          <div class="dossier-patient">${d.patientNom||"—"}</div>
+          <div class="dossier-hopital">🏥 ${d.hopital||"—"} · 📅 ${fdate(d.createdAt)}</div>
+        </div>
         <div style="display:flex;gap:4px;align-items:center">
-          ${d.autoValidated?'<span class="chip chip-auto">⚡</span>':""}
+          ${d.autoValidated?'<span class="chip chip-auto">⚡ Auto</span>':""}
           <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">
-        🏥 ${d.hopital} · 📅 ${fdate(d.createdAt)}
-      </div>
-      ${dl?`<div style="font-size:12px;margin-bottom:6px">⏱ Délai : <span class="${dl.cls}">${dl.txt}</span></div>`:""}
-      <div style="font-size:12px;color:var(--text-mid);margin-bottom:8px">${(d.actes||[]).join(" · ")}</div>
-      <div class="dossier-footer">
-        <div>
-          <div style="font-size:11px;color:var(--text-soft)">Montant total</div>
-          <div style="font-size:15px;font-weight:800">${fmt(d.montant)} FCFA</div>
-        </div>
-        ${d.remboursement!=null?`
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--text-soft)">Remboursé</div>
-          <div style="font-size:14px;font-weight:800;color:var(--green)">+${fmt(d.remboursement)} FCFA</div>
-        </div>`:""}
+      <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
+      <div class="dossier-montants">
+        <div><div class="m-label">Montant total</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
+        ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val" style="color:var(--green)">+${fmt(d.remboursement)} FCFA</div></div>`:""}
       </div>
       ${d.statut==="en attente"?`
-      <button class="btn btn-primary btn-icon" style="margin-top:10px"
-        onclick="openRembModal('${d._id}','${d.patientNom}',${d.montant},${d.couverture||80})">
-        <span>💸</span><span>Traiter ce remboursement</span>
-      </button>`:""}
-      ${d.paye?'<div class="alert alert-ok" style="margin-top:10px;margin-bottom:0;font-size:12px">✅ Reste à charge payé par le patient via MoMo</div>':""}
-    </div>`;
-  }).join("");
-}
-
-// ── MODAL REMBOURSEMENT ──
-window.openRembModal=(docId,nom,montant,taux)=>{
-  rembDocId=docId;
-  $("remb-sub").textContent="Patient : "+nom;
-  const suggested=Math.round(montant*(taux/100));
-  $("remb-info").innerHTML=`
-    Montant total du dossier : <strong>${fmt(montant)} FCFA</strong><br/>
-    Suggestion (${taux}%) : <strong>${fmt(suggested)} FCFA</strong>`;
-  $("remb-montant").value=suggested;
-  $("remb-decision").value="validé";
-  hideErr("remb-err");
-  $("remb-modal").classList.add("active");
-};
-window.closeRembModal=()=>$("remb-modal").classList.remove("active");
-window.saveRemb=async()=>{
-  const decision=$("remb-decision").value;
-  const remb=parseInt($("remb-montant").value);
-  hideErr("remb-err");
-  if(decision==="validé"&&(!remb||remb<=0)){
-    showErr("remb-err","Entrez un montant de remboursement valide.");return;
-  }
-  showOv("Traitement en cours...");
-  try{
-    const updates={statut:decision,updatedAt:new Date()};
-    if(decision==="validé")updates.remboursement=remb;
-    await updateDoc(doc(db,"dossiers",rembDocId),updates);
-    closeRembModal();
-    showToast(decision==="validé"?`✅ Remboursement de ${fmt(remb)} FCFA validé`:"❌ Dossier rejeté","#C47A00");
-    renderDossiers();
-  }catch(e){showErr("remb-err","Erreur. Vérifiez votre connexion.");}
-  finally{hideOv();}
-};
-
-// ═══════════════════════════════════════════
-// ── STATISTIQUES ──
-// ═══════════════════════════════════════════
-function renderStats(){
-  const dos=dossiersCache;
-  const assures=patientsCache.filter(p=>p.assureurEmail===assureurProfile.email&&p.statut==="actif");
-  const total=dos.length;
-  const valides=dos.filter(d=>d.statut==="validé").length;
-  const enAttente=dos.filter(d=>d.statut==="en attente").length;
-  const rejetes=dos.filter(d=>d.statut==="rejeté").length;
-  const totalMnt=dos.reduce((s,d)=>s+(d.montant||0),0);
-  const totalRemb=dos.reduce((s,d)=>s+(d.remboursement||0),0);
-  const autoCount=dos.filter(d=>d.autoValidated).length;
-  const taux=total>0?Math.round(valides/total*100):0;
-  const pendingPts=patientsCache.filter(p=>p.statut==="en_attente").length;
-
-  $("stats-grid").innerHTML=[
-    {l:"Assurés actifs",v:assures.length,c:"var(--green)"},
-    {l:"En attente validation",v:pendingPts,c:"var(--gold-mid)"},
-    {l:"Dossiers reçus",v:total,c:"var(--blue)"},
-    {l:"Dossiers traités",v:valides,c:"var(--purple)"},
-  ].map(s=>`
-    <div class="stat-card">
-      <div class="stat-num" style="color:${s.c}">${s.v}</div>
-      <div class="stat-lbl">${s.l}</div>
+      <div class="action-zone">
+        <div class="action-title">Action requise</div>
+        <label class="lbl">Montant à rembourser (FCFA)</label>
+        <input class="inp" type="number" id="remb-${d._id}" placeholder="Montant remboursé..." value="${d.couverture&&d.montant?Math.round(d.montant*d.couverture/100):""}"/>
+        <div id="act-err-${d._id}" class="alert alert-err" style="display:none"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-red btn-sm" onclick="openRejet('${d._id}')">✕ Rejeter</button>
+          <button class="btn btn-green" onclick="validerDossier('${d._id}',${d.montant})" style="flex:1">✓ Valider et rembourser</button>
+        </div>
+      </div>`
+      :d.statut==="rejeté"&&d.rejetMotif?`<div class="alert alert-err" style="margin-bottom:0">Motif : ${d.rejetMotif}${d.rejetComment?" — "+d.rejetComment:""}</div>`
+      :""}
     </div>`).join("");
-
-  $("stats-details").innerHTML=`
-    <div class="form-card">
-      <div class="form-title">💰 Synthèse financière</div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Montant total traité</span>
-        <strong>${fmt(totalMnt)} FCFA</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Remboursements émis</span>
-        <strong style="color:var(--green)">${fmt(totalRemb)} FCFA</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Dossiers en attente</span>
-        <strong style="color:var(--gold-mid)">${enAttente}</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px">
-        <span style="color:var(--text-soft)">Validations automatiques ⚡</span>
-        <strong style="color:var(--purple)">${autoCount}</strong>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:14px">
-        <span style="color:var(--text-soft)">Taux de validation</span>
-        <strong style="color:var(--blue)">${taux}%</strong>
-      </div>
-    </div>
-    ${totalMnt>0?`
-    <div class="form-card">
-      <div class="form-title">📊 Ratio remboursement</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-        <span style="color:var(--text-soft)">Taux de remboursement moyen</span>
-        <strong>${totalMnt>0?Math.round(totalRemb/totalMnt*100):0}%</strong>
-      </div>
-      <div class="plafond-bar-bg" style="height:12px">
-        <div class="plafond-bar-fill" style="width:${totalMnt>0?Math.min(Math.round(totalRemb/totalMnt*100),100):0}%;background:var(--green)"></div>
-      </div>
-    </div>`:""}`;
 }
 
-// ── SESSION PERSISTANTE ──
-onAuthStateChanged(auth,async user=>{
-  if(user&&!assureurProfile){
-    try{
-      const snap=await getDocs(query(collection(db,"assureurs"),where("email","==",user.email)));
-      if(!snap.empty){
-        assureurProfile={...snap.docs[0].data(),_id:snap.docs[0].id};
-        initDashboard();
-      }else{await signOut(auth);go("s-login");}
-    }catch{go("s-login");}
-  }
-});
+window.validerDossier=async(id,montantTotal)=>{
+  const remb=parseInt($("remb-"+id)?.value);
+  const errEl=$("act-err-"+id);
+  errEl.style.display="none";
+  if(!remb||remb<0){errEl.textContent="Entrez un montant de remboursement valide.";errEl.style.display="block";return;}
+  if(remb>montantTotal){errEl.textContent="Le remboursement ne peut pas dépasser le montant total.";errEl.style.display="block";return;}
+  showOv("Validation en cours...");
+  await updateDoc(doc(db,"dossiers",id),{
+    statut:"validé",
+    remboursement:remb,
+    validatedAt:new Date(),
+    validatedBy:currentAssurance.nom
+  });
+  hideOv();
+  showToast("✅ Dossier validé — Remboursement : "+fmt(remb)+" FCFA","#0A7C5C");
+  renderDossiers();
+};
+
+// ── REJET DOSSIER ──
+window.openRejet=id=>{
+  rejetDocId=id;
+  $("rejet-motif").value="";
+  $("rejet-comment").value="";
+  $("rejet-err").style.display="none";
+  $("rejet-modal").classList.add("active");
+};
+
+window.closeRejet=()=>{
+  $("rejet-modal").classList.remove("active");
+  rejetDocId=null;
+};
+
+window.confirmRejet=async()=>{
+  const motif=$("rejet-motif").value;
+  const comment=$("rejet-comment").value.trim();
+  $("rejet-err").style.display="none";
+  if(!motif){$("rejet-err").textContent="Sélectionnez un motif de rejet.";$("rejet-err").style.display="block";return;}
+  showOv("Rejet en cours...");
+  await updateDoc(doc(db,"dossiers",rejetDocId),{
+    statut:"rejeté",
+    rejetMotif:motif,
+    rejetComment:comment||null,
+    rejectedAt:new Date(),
+    rejectedBy:currentAssurance.nom
+  });
+  hideOv();
+  closeRejet();
+  showToast("Dossier rejeté — Motif : "+motif,"#D63031");
+  renderDossiers();
+};
+
+// ══════════════════════════════════════════
+// ── ONGLET 4 : STATISTIQUES
+// ══════════════════════════════════════════
+async function renderStats(){
+  showOv("Calcul des statistiques...");
+  const [snapPts,snapDos]=await Promise.all([
+    getDocs(query(collection(db,"patients"),where("compagnie","==",currentAssurance.nom))),
+    getDocs(query(collection(db,"dossiers"),where("assuranceCompagnie","==",currentAssurance.nom)))
+  ]);
+  hideOv();
+  const pts=snapPts.docs.map(d=>d.data());
+  const dos=snapDos.docs.map(d=>d.data());
+  const actifs=pts.filter(p=>p.assuranceValide).length;
+  const attente=pts.filter(p=>p.statut==="en_attente").length;
+  const dosValides=dos.filter(d=>d.statut==="validé").length;
+  const dosAttente=dos.filter(d=>d.statut==="en attente").length;
+  const totalRemb=dos.filter(d=>d.remboursement).reduce((s,d)=>s+(d.remboursement||0),0);
+  const totalFact=dos.reduce((s,d)=>s+(d.montant||0),0);
+  const now=new Date();
+  const moisRemb=dos.filter(d=>d.statut==="validé"&&d.validatedAt&&(d.validatedAt.toDate?d.validatedAt.toDate():new Date(d.validatedAt)).getMonth()===now.getMonth()).reduce((s,d)=>s+(d.remboursement||0),0);
+
+  $("stats-grid").innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${actifs}</div><div class="stat-label">Patients actifs</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${attente}</div><div class="stat-label">En attente validation</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${dosValides}</div><div class="stat-label">Dossiers validés</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${dosAttente}</div><div class="stat-label">Dossiers en attente</div></div>`;
+
+  $("stats-detail").innerHTML=`
+    <div class="card">
+      <div class="card-title">💰 Finances globales</div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-soft);font-size:14px">Total facturé par les hôpitaux</span>
+        <strong style="font-size:15px">${fmt(totalFact)} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-soft);font-size:14px">Total remboursé (cumulé)</span>
+        <strong style="font-size:15px;color:var(--green)">+${fmt(totalRemb)} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0">
+        <span style="color:var(--text-soft);font-size:14px">Remboursements ce mois</span>
+        <strong style="font-size:15px;color:var(--orange)">+${fmt(moisRemb)} FCFA</strong>
+      </div>
+    </div>`;
+}
 </script>
 </body>
 </html>
