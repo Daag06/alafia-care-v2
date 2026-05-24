@@ -249,7 +249,6 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     <button class="tab active" id="tab-nouveau" onclick="switchTab('nouveau')">➕ Nouveau dossier</button>
     <button class="tab" id="tab-historique" onclick="switchTab('historique')">📋 Historique <span id="hist-badge" class="tab-badge" style="display:none">!</span></button>
     <button class="tab" id="tab-dossiers" onclick="switchTab('dossiers')">📂 Dossiers médicaux</button>
-    <button class="tab" id="tab-paiements" onclick="switchTab('paiements')">💰 Paiements reçus</button>
     <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
@@ -314,21 +313,13 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     </div>
   </div>
 
-  <<!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
+  <!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
   <div id="pane-dossiers" style="display:none;flex:1;overflow-y:auto">
     <div class="content-wide">
       <div id="dossiers-list"></div>
     </div>
   </div>
-
-  <!-- ── ONGLET PAIEMENTS REÇUS ── -->
-  <div id="pane-paiements" style="display:none;flex:1;overflow-y:auto">
-    <div class="content-wide">
-      <div id="paiements-list"></div>
-    </div>
-  </div>
-
-</div>
+ 
 
   <!-- ── ONGLET STATS ── -->
   <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
@@ -342,7 +333,7 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,addDoc,getDocs,doc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,addDoc,getDocs,doc,query,where,onSnapshot,getDoc,updateDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import{getAuth,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app=initializeApp({
@@ -385,14 +376,13 @@ const showToast=(msg,color="#1A1A2E")=>{
 
 // ── NAVIGATION ──
 window.switchTab=tab=>{
-  ["nouveau","historique","stats"].forEach(t=>{
+  ["nouveau","historique","dossiers","stats"].forEach(t=>{
     $("pane-"+t).style.display=t===tab?"flex":"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
-  if(tab==="historique"){
-    $("hist-badge").style.display="none";
-    renderHistorique();
-  }
+  if(tab==="nouveau") hReset();
+  if(tab==="historique") renderHistorique();
+  if(tab==="dossiers") renderDossiersHopital();
   if(tab==="stats") renderStats();
 };
 
@@ -719,49 +709,136 @@ async function renderDossiersHopital(){
     $("dossiers-list").innerHTML='<div class="empty"><div class="empty-icon">📂</div><div style="font-size:14px">Aucun dossier médical</div></div>';
     return;
   }
-  $("dossiers-list").innerHTML=dos.map(d=>`
-    <div class="dossier-row">
-      <div class="dossier-head">
-        <div class="dossier-patient">${d.patientNom||"—"}</div>
-        <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
-      </div>
-      <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
-      <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
-      <div class="dossier-montants">
-        <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
-        ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
-      </div>
-    </div>`).join("");
-}
-
-// ══════════════════════════════════════════
-// ── ONGLET PAIEMENTS REÇUS
-// ══════════════════════════════════════════
-async function renderPaiements(){
-  showOv("Chargement paiements...");
-  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
-  hideOv();
-  const dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
-  const avecReste=dos.filter(d=>d.montant&&d.remboursement!=null&&(d.montant-d.remboursement)>0);
-  if(avecReste.length===0){
-    $("paiements-list").innerHTML='<div class="empty"><div class="empty-icon">💰</div><div style="font-size:14px">Aucun paiement en attente</div></div>';
-    return;
-  }
-  $("paiements-list").innerHTML=avecReste.map(d=>{
-    const reste=d.montant-d.remboursement;
+  $("dossiers-list").innerHTML=dos.map(d=>{
+    const resteACharge=d.montant-(d.remboursement||0);
+    const paiements=d.paiements||[];
+    
     return `
       <div class="dossier-row">
         <div class="dossier-head">
           <div class="dossier-patient">${d.patientNom||"—"}</div>
-          <span class="chip chip-pending">⏳ En attente</span>
+          <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
         </div>
         <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
+        <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
         <div class="dossier-montants">
-          <div><div class="m-label">Reste à charge</div><div class="m-val" style="color:#F5A623">${fmt(reste)} FCFA</div></div>
+          <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
+          ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
         </div>
+        ${resteACharge>0?`
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text-soft);margin-bottom:6px;font-weight:600">💰 Reste à charge : <strong style="color:var(--gold)">${fmt(resteACharge)} FCFA</strong></div>
+            <div style="font-size:12px;color:var(--text-soft);margin-bottom:8px;font-weight:600">📋 Paiements effectués :</div>
+            ${paiements.length>0?`
+              <div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:10px">
+                ${paiements.map(p=>`
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+                    <span>${p.type==="momo"?"📱 MoMo":"💵 Cash"} : <strong>${fmt(p.montant)} FCFA</strong></span>
+                    <span style="color:var(--text-soft);font-size:11px">${fdate(p.date)}</span>
+                  </div>`).join("")}
+              </div>
+            `:`
+              <div style="font-size:12px;color:var(--text-soft);padding:8px;background:var(--bg);border-radius:8px;margin-bottom:10px">Aucun paiement enregistré</div>
+            `}
+            ${paiements.filter(p=>p.type==="cash").length===0?`
+              <button class="btn btn-secondary btn-sm" onclick="confirmerCashModal('${d._id}', ${resteACharge})" style="width:100%">✅ Confirmer paiement cash</button>
+            `:""}
+          </div>
+        `:""}
       </div>`;
   }).join("");
 }
+
+// ══════════════════════════════════════════
+// ── CONFIRMER PAIEMENT CASH
+// ══════════════════════════════════════════
+window.confirmerCashModal=async(dossierId, montant)=>{
+  const m=document.createElement("div");
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+  m.innerHTML=`
+    <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">💰 Confirmer paiement cash</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Enregistrez le paiement en espèces reçu du patient</div>
+      
+      <div style="background:var(--gold-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--gold);text-align:center">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Montant à recevoir</div>
+        <div style="font-size:28px;font-weight:800;color:var(--gold)">${fmt(montant)} FCFA</div>
+      </div>
+      
+      <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="confirm-cash-cb" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold)"/>
+        <span style="font-size:13px;color:var(--text-mid)">Je confirme avoir reçu <strong>${fmt(montant)} FCFA</strong> en espèces du patient</span>
+      </label>
+      
+      <div id="confirm-cash-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      
+      <div style="display:flex;gap:10px">
+        <button id="c-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
+        <button id="c-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--gold),#F59E0B);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✅ Confirmer</button>
+      </div>
+    </div>`;
+  
+  document.body.appendChild(m);
+  
+  const confirmBtn=m.querySelector("#c-confirm");
+  const cancelBtn=m.querySelector("#c-cancel");
+  const checkbox=m.querySelector("#confirm-cash-cb");
+  const errDiv=m.querySelector("#confirm-cash-err");
+  
+  confirmBtn.onclick=async()=>{
+    if(!checkbox.checked){
+      errDiv.textContent="Cochez la case pour confirmer.";
+      errDiv.style.display="block";
+      return;
+    }
+    
+    confirmBtn.disabled=true;
+    confirmBtn.textContent="Enregistrement...";
+    
+    try{
+      showOv("Enregistrement du paiement...");
+      
+      // Récupère le dossier
+      const docRef=doc(db,"dossiers",dossierId);
+      const docSnap=await getDoc(docRef);
+      const dosData=docSnap.data();
+      
+      // Ajoute le paiement cash au tableau
+      const paiements=dosData.paiements||[];
+      paiements.push({
+        type:"cash",
+        montant:montant,
+        date:new Date(),
+        agentNom:currentHopital.nom,
+        statut:"confirmé"
+      });
+      
+      // Met à jour le dossier
+      await updateDoc(docRef,{
+        paiements:paiements,
+        updatedAt:new Date()
+      });
+      
+      hideOv();
+      document.body.removeChild(m);
+      
+      showToast("✅ Paiement cash enregistré !","#0A7C5C");
+      renderDossiersHopital();
+      
+    }catch(e){
+      hideOv();
+      confirmBtn.disabled=false;
+      confirmBtn.textContent="✅ Confirmer";
+      errDiv.textContent="Erreur lors de l'enregistrement. Réessayez.";
+      errDiv.style.display="block";
+      console.error(e);
+    }
+  };
+  
+  cancelBtn.onclick=()=>{
+    document.body.removeChild(m);
+  };
+};
 
 // ── STATS ──
 async function renderStats(){
