@@ -516,6 +516,7 @@ async function renderAttente(){
   ]);
   hideOv();
   const forfaits=snapForfaits.docs.map(d=>({...d.data(),_id:d.id}));
+  const pts=snapPts.docs.map(d=>({...d.data(),_id:d.id}));
   if(pts.length===0){
     $("attente-list").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div style="font-size:14px;font-weight:600">Aucun patient en attente</div><div style="font-size:13px;margin-top:6px">Tous les dossiers ont été traités.</div></div>';
     return;
