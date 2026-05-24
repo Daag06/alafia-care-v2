@@ -757,12 +757,77 @@ window.confirmRejet=async()=>{
 };
 
 // ══════════════════════════════════════════
+// ── TYPES DE CONTRATS
+// ══════════════════════════════════════════
+async function loadTypesContrats(){
+  const snap=await getDocs(query(collection(db,"typeContrats"),where("assuranceNom","==",currentAssurance.nom)));
+  const types=snap.docs.map(d=>({...d.data(),_id:d.id}));
+
+  // Remplir le select du formulaire forfait
+  const sel=$("ff-type");
+  if(types.length===0){
+    sel.innerHTML='<option value="">Aucun type — créez-en un ci-dessus</option>';
+  }else{
+    sel.innerHTML=types.map(t=>`<option value="${t.nom}">${t.nom}</option>`).join("");
+  }
+
+  // Afficher la liste des types
+  if(types.length===0){
+    $("types-list").innerHTML='<div style="font-size:13px;color:var(--text-soft);text-align:center;padding:1rem">Aucun type de contrat créé.</div>';
+    return;
+  }
+  $("types-list").innerHTML=types.map(t=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px;font-weight:600">${t.nom}</span>
+      <button class="btn btn-red btn-sm" onclick="deleteTypeContrat('${t._id}','${t.nom}')">🗑️</button>
+    </div>`).join("");
+}
+
+window.saveTypeContrat=async()=>{
+  const nom=$("tc-nom").value.trim();
+  $("tc-err").style.display="none";
+  if(!nom){
+    $("tc-err").textContent="Entrez un nom de type de contrat.";
+    $("tc-err").style.display="block";
+    return;
+  }
+  // Vérifier si ce type existe déjà
+  const snap=await getDocs(query(collection(db,"typeContrats"),where("assuranceNom","==",currentAssurance.nom),where("nom","==",nom)));
+  if(!snap.empty){
+    $("tc-err").textContent="Ce type de contrat existe déjà.";
+    $("tc-err").style.display="block";
+    return;
+  }
+  showOv("Création...");
+  await addDoc(collection(db,"typeContrats"),{
+    nom,
+    assuranceNom:currentAssurance.nom,
+    assuranceId:currentAssurance._id,
+    createdAt:new Date()
+  });
+  hideOv();
+  $("tc-nom").value="";
+  showToast("✅ Type de contrat ajouté !","#0A7C5C");
+  await loadTypesContrats();
+};
+
+window.deleteTypeContrat=async(id,nom)=>{
+  if(!confirm("Supprimer le type \""+nom+"\" ?")) return;
+  showOv("Suppression...");
+  await deleteDoc(doc(db,"typeContrats",id));
+  hideOv();
+  showToast("Type supprimé.","#D63031");
+  await loadTypesContrats();
+};
+
+// ══════════════════════════════════════════
 // ── FORFAITS
 // ══════════════════════════════════════════
 let editForfaitId=null;
 
 async function renderForfaits(){
   showOv("Chargement...");
+  await loadTypesContrats();
   const snap=await getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)));
   hideOv();
   const forfaits=snap.docs.map(d=>({...d.data(),_id:d.id}));
