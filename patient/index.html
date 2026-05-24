@@ -265,7 +265,9 @@ select.inp{cursor:pointer}
       <div class="form-title">Assurance</div>
       <div class="form-sub">Votre couverture maladie</div>
       <label class="lbl">Compagnie d'assurance</label>
-      <input class="inp" id="reg-compagnie" placeholder="Ex: SOBAC, NSIA, COLINA, AMO..."/>
+      <select class="inp" id="reg-compagnie">
+        <option value="">Chargement...</option>
+      </select>
       <label class="lbl">Numéro de police</label>
       <input class="inp" id="reg-police" placeholder="Ex: POL-2026-XXXX"/>
       <label class="lbl">Numéro MoMo MTN</label>
@@ -459,6 +461,18 @@ async function getDos(patientId){
 }
 
 // ── INSCRIPTION ──
+async function loadCompagnies(){
+      const snap=await getDocs(collection(db,"assurances"));
+      const sel=$("reg-compagnie");
+      sel.innerHTML='<option value="">Sélectionner votre assurance</option>';
+      snap.docs.forEach(d=>{
+        const opt=document.createElement("option");
+        opt.value=d.data().nom;
+        opt.textContent=d.data().nom;
+        sel.appendChild(opt);
+      });
+    }
+
 window.doRegister=async()=>{
   const nom=$("reg-nom").value.trim(),prenom=$("reg-prenom").value.trim(),tel=$("reg-tel").value.trim();
   $("reg-err").style.display="none";
@@ -702,15 +716,16 @@ window.openMomo=(docId,montant,num)=>{
 };
 
 window.momoStep=async(step)=>{
-  ["momo-s1","momo-s2","momo-s3"].forEach((s,i)=>{
-    $(s).classList.toggle("active",i+1===step);
-  });
+  $("momo-s1").classList.toggle("active",step===1);
+  $("momo-s2").classList.toggle("active",step===2);
+  $("momo-s3").classList.toggle("active",step===3);
   if(step===2){
-    // Simulation traitement 2.5s
     setTimeout(async()=>{
       if(momoDocId){
         await updateDoc(doc(db,"dossiers",momoDocId),{paye:true,payeAt:new Date()});
-        momoStep(3);
+        $("momo-s1").classList.remove("active");
+        $("momo-s2").classList.remove("active");
+        $("momo-s3").classList.add("active");
         showToast("✅ Paiement MoMo confirmé !","#0A7C5C");
         renderDossiers();
       }
@@ -725,10 +740,10 @@ window.closeMomo=()=>{
 
 // ── INIT ──
 (async()=>{
-  // PWA Service Worker
   if("serviceWorker" in navigator){
     try{await navigator.serviceWorker.register("sw.js");}catch(e){}
   }
+  await loadCompagnies();
 })();
 </script>
 </body>

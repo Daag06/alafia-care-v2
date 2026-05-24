@@ -260,6 +260,7 @@ select.inp{cursor:pointer}
     <button class="tab" id="tab-dossiers" onclick="switchTab('dossiers')">
       📋 Dossiers <span id="badge-dossiers" class="tab-badge" style="display:none">0</span>
     </button>
+    <button class="tab" id="tab-forfaits" onclick="switchTab('forfaits')">📦 Forfaits</button>
     <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
@@ -293,6 +294,60 @@ select.inp{cursor:pointer}
     </div>
   </div>
 
+  <!-- ── ONGLET FORFAITS ── -->
+  <div id="pane-forfaits" style="display:none;flex:1;overflow-y:auto">
+    <div class="content">
+
+      <!-- Section Types de contrats -->
+      <div class="card" id="types-card">
+        <div class="card-title">📝 Types de contrats</div>
+        <div class="card-sub">Définissez vos propres types de contrats</div>
+        <div style="display:flex;gap:10px;margin-bottom:1rem">
+          <input class="inp" id="tc-nom" placeholder="Ex: Plan Famille, Santé Senior..." style="margin-bottom:0;flex:1"/>
+          <button class="btn btn-primary btn-sm" onclick="saveTypeContrat()" style="white-space:nowrap">➕ Ajouter</button>
+        </div>
+        <div id="tc-err" class="alert alert-err" style="display:none"></div>
+        <div id="types-list"></div>
+      </div>
+
+      <!-- Formulaire création/édition -->
+      <div class="card" id="forfait-form-card">
+        <div class="card-title" id="forfait-form-title">➕ Nouveau forfait</div>
+        <div class="card-sub">Définissez les paramètres de ce forfait</div>
+        <label class="lbl">Nom du forfait *</label>
+        <input class="inp" id="ff-nom" placeholder="Ex: Plan Famille, Santé Premium..."/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="lbl">Taux de couverture (%) *</label>
+            <input class="inp" type="number" id="ff-taux" placeholder="Ex: 80" min="1" max="100"/>
+          </div>
+          <div>
+            <label class="lbl">Plafond annuel (FCFA) *</label>
+            <input class="inp" type="number" id="ff-plafond" placeholder="Ex: 500000"/>
+          </div>
+        </div>
+        <label class="lbl">Type de contrat *</label>
+        <select class="inp" id="ff-type">
+          <option value="">Chargement des types...</option>
+        </select>
+        <label class="lbl">Description (optionnel)</label>
+        <input class="inp" id="ff-desc" placeholder="Ex: Idéal pour les familles de 4 personnes..."/>
+        <div id="ff-err" class="alert alert-err" style="display:none"></div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <button class="btn btn-secondary" onclick="resetForfaitForm()" style="flex:1">Annuler</button>
+          <button class="btn btn-primary btn-block" id="ff-submit-btn" onclick="saveForfait()" style="flex:2">✓ Enregistrer le forfait</button>
+        </div>
+      </div>
+
+      <!-- Liste des forfaits -->
+      <div class="section-title" style="font-size:15px;font-weight:800;margin:1rem 0 12px;display:flex;align-items:center;gap:8px">
+        📋 Mes forfaits
+      </div>
+      <div id="forfaits-list"></div>
+
+    </div>
+  </div>
+
   <!-- ── ONGLET STATS ── -->
   <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
     <div class="content">
@@ -304,7 +359,7 @@ select.inp{cursor:pointer}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,getDocs,doc,updateDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import{getAuth,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app=initializeApp({
@@ -342,13 +397,14 @@ const showToast=(msg,color="#1A1A2E")=>{
 
 // ── NAVIGATION ──
 window.switchTab=tab=>{
-  ["attente","assures","dossiers","stats"].forEach(t=>{
-    $("pane-"+t).style.display=t===tab?"flex":"none";
+  ["attente","assures","dossiers","forfaits","stats"].forEach(t=>{
+    $("pane-"+t).style.display=t===tab?(t==="forfaits"?"block":"flex"):"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
   if(tab==="attente") renderAttente();
   if(tab==="assures") renderAssures();
   if(tab==="dossiers") renderDossiers();
+  if(tab==="forfaits") renderForfaits();
   if(tab==="stats") renderStats();
 };
 
@@ -698,6 +754,119 @@ window.confirmRejet=async()=>{
   closeRejet();
   showToast("Dossier rejeté — Motif : "+motif,"#D63031");
   renderDossiers();
+};
+
+// ══════════════════════════════════════════
+// ── FORFAITS
+// ══════════════════════════════════════════
+let editForfaitId=null;
+
+async function renderForfaits(){
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)));
+  hideOv();
+  const forfaits=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  if(forfaits.length===0){
+    $("forfaits-list").innerHTML=`
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div style="font-size:14px;font-weight:600">Aucun forfait créé</div>
+        <div style="font-size:13px;margin-top:6px">Créez votre premier forfait ci-dessus.</div>
+      </div>`;
+    return;
+  }
+  $("forfaits-list").innerHTML=forfaits.map(f=>`
+    <div class="card" style="margin-bottom:12px" id="fc-${f._id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:16px;font-weight:800">${f.nom}</div>
+          ${f.description?`<div style="font-size:12px;color:var(--text-soft);margin-top:2px">${f.description}</div>`:""}
+        </div>
+        <span class="chip chip-auto">⚡ ${f.type}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="detail-item">
+          <div class="detail-label">Taux de couverture</div>
+          <div class="detail-val" style="font-size:20px;font-weight:800;color:var(--green)">${f.taux}%</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Plafond annuel</div>
+          <div class="detail-val" style="font-size:15px;font-weight:800">${fmt(f.plafond)} FCFA</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="editForfait('${f._id}')" style="flex:1">✏️ Modifier</button>
+        <button class="btn btn-red btn-sm" onclick="deleteForfait('${f._id}','${f.nom}')" style="flex:1">🗑️ Supprimer</button>
+      </div>
+    </div>`).join("");
+}
+
+window.saveForfait=async()=>{
+  const nom=$("ff-nom").value.trim();
+  const taux=parseInt($("ff-taux").value);
+  const plafond=parseInt($("ff-plafond").value);
+  const type=$("ff-type").value;
+  const description=$("ff-desc").value.trim();
+  $("ff-err").style.display="none";
+  if(!nom){$("ff-err").textContent="Le nom du forfait est obligatoire.";$("ff-err").style.display="block";return;}
+  if(!taux||taux<1||taux>100){$("ff-err").textContent="Entrez un taux valide (1-100%).";$("ff-err").style.display="block";return;}
+  if(!plafond||plafond<1){$("ff-err").textContent="Entrez un plafond valide.";$("ff-err").style.display="block";return;}
+  showOv(editForfaitId?"Modification...":"Création...");
+  if(editForfaitId){
+    await updateDoc(doc(db,"forfaits",editForfaitId),{nom,taux,plafond,type,description:description||null,updatedAt:new Date()});
+    showToast("✅ Forfait modifié avec succès !","#0A7C5C");
+  }else{
+    await addDoc(collection(db,"forfaits"),{
+      nom,taux,plafond,type,
+      description:description||null,
+      assuranceNom:currentAssurance.nom,
+      assuranceId:currentAssurance._id,
+      createdAt:new Date()
+    });
+    showToast("✅ Forfait créé avec succès !","#0A7C5C");
+  }
+  hideOv();
+  resetForfaitForm();
+  renderForfaits();
+};
+
+window.editForfait=async(id)=>{
+  showOv("Chargement...");
+  const snap=await getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)));
+  hideOv();
+  const f=snap.docs.map(d=>({...d.data(),_id:d.id})).find(x=>x._id===id);
+  if(!f)return;
+  editForfaitId=id;
+  $("ff-nom").value=f.nom;
+  $("ff-taux").value=f.taux;
+  $("ff-plafond").value=f.plafond;
+  $("ff-type").value=f.type;
+  $("ff-desc").value=f.description||"";
+  $("forfait-form-title").textContent="✏️ Modifier le forfait";
+  $("ff-submit-btn").textContent="✓ Enregistrer les modifications";
+  // Scroll vers le formulaire
+  $("forfait-form-card").scrollIntoView({behavior:"smooth"});
+};
+
+window.deleteForfait=async(id,nom)=>{
+  if(!confirm("Supprimer le forfait \""+nom+"\" ?")) return;
+  showOv("Suppression...");
+  await deleteDoc(doc(db,"forfaits",id));
+  hideOv();
+  showToast("Forfait supprimé.","#D63031");
+  renderForfaits();
+};
+
+window.resetForfaitForm=()=>{
+  editForfaitId=null;
+  $("ff-nom").value="";
+  $("ff-taux").value="";
+  $("ff-plafond").value="";
+  $("ff-type").value="AMO";
+  $("ff-desc").value="";
+  $("ff-err").style.display="none";
+  $("forfait-form-title").textContent="➕ Nouveau forfait";
+  $("ff-submit-btn").textContent="✓ Enregistrer le forfait";
 };
 
 // ══════════════════════════════════════════
