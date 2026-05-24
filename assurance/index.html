@@ -510,9 +510,12 @@ window.doLogout=async()=>{
 // ══════════════════════════════════════════
 async function renderAttente(){
   showOv("Chargement...");
-  const snap=await getDocs(query(collection(db,"patients"),where("statut","==","en_attente"),where("compagnie","==",currentAssurance.nom)));
+  const [snapPts,snapForfaits]=await Promise.all([
+    getDocs(query(collection(db,"patients"),where("statut","==","en_attente"),where("compagnie","==",currentAssurance.nom))),
+    getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)))
+  ]);
   hideOv();
-  const pts=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  const forfaits=snapForfaits.docs.map(d=>({...d.data(),_id:d.id}));
   if(pts.length===0){
     $("attente-list").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div style="font-size:14px;font-weight:600">Aucun patient en attente</div><div style="font-size:13px;margin-top:6px">Tous les dossiers ont été traités.</div></div>';
     return;
@@ -537,26 +540,28 @@ async function renderAttente(){
 
       <!-- Formulaire de validation -->
       <div class="validation-form" id="vf-${p._id}">
-        <div class="validation-form-title">⚙️ Paramètres d'assurance</div>
-        <div class="val-grid">
-          <div>
-            <label class="lbl">Type de contrat</label>
-            <select class="inp" id="vf-type-${p._id}" style="margin-bottom:0">
-              <option value="AMO">AMO (Assurance Maladie Obligatoire)</option>
-              <option value="AMV">AMV (Assurance Maladie Volontaire)</option>
-              <option value="INAM">INAM</option>
-              <option value="Privé">Contrat Privé</option>
-            </select>
+        <div class="validation-form-title">⚙️ Sélectionner un forfait</div>
+        <label class="lbl">Forfait *</label>
+        <select class="inp" id="vf-forfait-${p._id}" style="margin-bottom:10px" onchange="applyForfait('${p._id}')">
+          <option value="">Sélectionner un forfait...</option>
+        </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="detail-item">
+            <div class="detail-label">Type</div>
+            <div class="detail-val" id="vf-type-display-${p._id}" style="font-size:13px">—</div>
           </div>
-          <div>
-            <label class="lbl">Taux de couverture (%)</label>
-            <input class="inp" type="number" id="vf-taux-${p._id}" placeholder="Ex: 80" min="1" max="100" style="margin-bottom:0"/>
+          <div class="detail-item">
+            <div class="detail-label">Taux</div>
+            <div class="detail-val" id="vf-taux-display-${p._id}" style="color:var(--green)">—</div>
           </div>
-          <div>
-            <label class="lbl">Plafond annuel (FCFA)</label>
-            <input class="inp" type="number" id="vf-plafond-${p._id}" placeholder="Ex: 500000" style="margin-bottom:0"/>
+          <div class="detail-item">
+            <div class="detail-label">Plafond</div>
+            <div class="detail-val" id="vf-plafond-display-${p._id}" style="font-size:12px">—</div>
           </div>
         </div>
+        <input type="hidden" id="vf-type-${p._id}"/>
+        <input type="hidden" id="vf-taux-${p._id}"/>
+        <input type="hidden" id="vf-plafond-${p._id}"/>
         <div id="vf-err-${p._id}" class="alert alert-err" style="display:none;margin-top:8px"></div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <button class="btn btn-red btn-sm" onclick="rejeterPatient('${p._id}','${p.prenom} ${p.nom}')">✕ Rejeter</button>
@@ -564,16 +569,59 @@ async function renderAttente(){
         </div>
       </div>
     </div>`).join("");
+
+    // Charger les forfaits dans chaque select
+    pts.forEach(p=>{
+      const sel=document.getElementById("vf-forfait-"+p._id);
+      if(!sel)return;
+      if(forfaits.length===0){
+        sel.innerHTML='<option value="">Aucun forfait — créez-en dans l\'onglet Forfaits</option>';
+      }else{
+        sel.innerHTML='<option value="">Sélectionner un forfait...</option>'+
+          forfaits.map(f=>`<option value="${f._id}">${f.nom} — ${f.taux}% / ${Number(f.plafond).toLocaleString("fr-FR")} FCFA</option>`).join("");
+      }
+    });
 }
+
+// Forfaits en mémoire pour applyForfait
+let cachedForfaits=[];
+
+window.applyForfait=async(patientId)=>{
+  const sel=document.getElementById("vf-forfait-"+patientId);
+  const forfaitId=sel?.value;
+  if(!forfaitId){
+    document.getElementById("vf-type-display-"+patientId).textContent="—";
+    document.getElementById("vf-taux-display-"+patientId).textContent="—";
+    document.getElementById("vf-plafond-display-"+patientId).textContent="—";
+    document.getElementById("vf-type-"+patientId).value="";
+    document.getElementById("vf-taux-"+patientId).value="";
+    document.getElementById("vf-plafond-"+patientId).value="";
+    return;
+  }
+  // Chercher le forfait dans Firestore
+  const snap=await getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)));
+  const f=snap.docs.map(d=>({...d.data(),_id:d.id})).find(x=>x._id===forfaitId);
+  if(!f)return;
+  // Afficher les détails
+  document.getElementById("vf-type-display-"+patientId).textContent=f.type;
+  document.getElementById("vf-taux-display-"+patientId).textContent=f.taux+"%";
+  document.getElementById("vf-plafond-display-"+patientId).textContent=Number(f.plafond).toLocaleString("fr-FR")+" FCFA";
+  // Stocker dans les champs cachés
+  document.getElementById("vf-type-"+patientId).value=f.type;
+  document.getElementById("vf-taux-"+patientId).value=f.taux;
+  document.getElementById("vf-plafond-"+patientId).value=f.plafond;
+};
 
 window.validerPatient=async(id)=>{
   const type=$("vf-type-"+id)?.value;
   const taux=parseInt($("vf-taux-"+id)?.value);
   const plafond=parseInt($("vf-plafond-"+id)?.value);
+  const forfaitSel=$("vf-forfait-"+id)?.value;
   const errEl=$("vf-err-"+id);
   errEl.style.display="none";
-  if(!taux||taux<1||taux>100){errEl.textContent="Entrez un taux valide (1-100%).";errEl.style.display="block";return;}
-  if(!plafond||plafond<1){errEl.textContent="Entrez un plafond annuel valide.";errEl.style.display="block";return;}
+  if(!forfaitSel){errEl.textContent="Sélectionnez un forfait.";errEl.style.display="block";return;}
+  if(!taux||taux<1||taux>100){errEl.textContent="Forfait invalide — taux incorrect.";errEl.style.display="block";return;}
+  if(!plafond||plafond<1){errEl.textContent="Forfait invalide — plafond incorrect.";errEl.style.display="block";return;}
   showOv("Validation en cours...");
   const alafiaId="AL-"+Math.random().toString(36).substr(2,6).toUpperCase();
   await updateDoc(doc(db,"patients",id),{
