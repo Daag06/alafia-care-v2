@@ -248,6 +248,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
   <div class="tabs">
     <button class="tab active" id="tab-nouveau" onclick="switchTab('nouveau')">➕ Nouveau dossier</button>
     <button class="tab" id="tab-historique" onclick="switchTab('historique')">📋 Historique <span id="hist-badge" class="tab-badge" style="display:none">!</span></button>
+    <button class="tab" id="tab-dossiers" onclick="switchTab('dossiers')">📂 Dossiers médicaux</button>
+    <button class="tab" id="tab-paiements" onclick="switchTab('paiements')">💰 Paiements reçus</button>
     <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
@@ -311,6 +313,22 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       <div id="hist-list"></div>
     </div>
   </div>
+
+  <<!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
+  <div id="pane-dossiers" style="display:none;flex:1;overflow-y:auto">
+    <div class="content-wide">
+      <div id="dossiers-list"></div>
+    </div>
+  </div>
+
+  <!-- ── ONGLET PAIEMENTS REÇUS ── -->
+  <div id="pane-paiements" style="display:none;flex:1;overflow-y:auto">
+    <div class="content-wide">
+      <div id="paiements-list"></div>
+    </div>
+  </div>
+
+</div>
 
   <!-- ── ONGLET STATS ── -->
   <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
@@ -686,6 +704,63 @@ async function renderHistorique(){
         ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
       </div>
     </div>`).join("");
+}
+
+// ══════════════════════════════════════════
+// ── ONGLET DOSSIERS MÉDICAUX (HÔPITAL)
+// ══════════════════════════════════════════
+async function renderDossiersHopital(){
+  showOv("Chargement dossiers médicaux...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  hideOv();
+  const dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  if(dos.length===0){
+    $("dossiers-list").innerHTML='<div class="empty"><div class="empty-icon">📂</div><div style="font-size:14px">Aucun dossier médical</div></div>';
+    return;
+  }
+  $("dossiers-list").innerHTML=dos.map(d=>`
+    <div class="dossier-row">
+      <div class="dossier-head">
+        <div class="dossier-patient">${d.patientNom||"—"}</div>
+        <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
+      </div>
+      <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
+      <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
+      <div class="dossier-montants">
+        <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
+        ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
+      </div>
+    </div>`).join("");
+}
+
+// ══════════════════════════════════════════
+// ── ONGLET PAIEMENTS REÇUS
+// ══════════════════════════════════════════
+async function renderPaiements(){
+  showOv("Chargement paiements...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  hideOv();
+  const dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  const avecReste=dos.filter(d=>d.montant&&d.remboursement!=null&&(d.montant-d.remboursement)>0);
+  if(avecReste.length===0){
+    $("paiements-list").innerHTML='<div class="empty"><div class="empty-icon">💰</div><div style="font-size:14px">Aucun paiement en attente</div></div>';
+    return;
+  }
+  $("paiements-list").innerHTML=avecReste.map(d=>{
+    const reste=d.montant-d.remboursement;
+    return `
+      <div class="dossier-row">
+        <div class="dossier-head">
+          <div class="dossier-patient">${d.patientNom||"—"}</div>
+          <span class="chip chip-pending">⏳ En attente</span>
+        </div>
+        <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
+        <div class="dossier-montants">
+          <div><div class="m-label">Reste à charge</div><div class="m-val" style="color:#F5A623">${fmt(reste)} FCFA</div></div>
+        </div>
+      </div>`;
+  }).join("");
 }
 
 // ── STATS ──
