@@ -331,6 +331,7 @@ select.inp{cursor:pointer}
   <div class="tabs">
     <button class="tab active" id="tab-qr" onclick="switchTab('qr')">🪪 Carte</button>
     <button class="tab" id="tab-dos" onclick="switchTab('dos')">📋 Dossiers</button>
+    <button class="tab" id="tab-cot" onclick="switchTab('cot')">💳 Cotisations</button>
     <button class="tab" id="tab-profil" onclick="switchTab('profil')">👤 Profil</button>
   </div>
 
@@ -343,6 +344,12 @@ select.inp{cursor:pointer}
   <div id="pane-dos" style="display:none;flex:1;overflow-y:auto;padding:1.5rem">
     <div class="section-title">📋 Mes dossiers médicaux</div>
     <div id="dos-list"></div>
+  </div>
+
+   <!-- TAB : COTISATIONS -->
+   <div id="pane-cot" style="display:none;flex:1;overflow-y:auto;padding:1.5rem">
+    <div class="section-title">💳 Mes cotisations</div>
+    <div id="cot-content"></div>
   </div>
 
   <!-- TAB : PROFIL -->
@@ -434,11 +441,12 @@ window.logout=()=>{
 
 // ── TABS DASHBOARD ──
 window.switchTab=tab=>{
-  ["qr","dos","profil"].forEach(t=>{
+  ["qr","dos","cot","profil"].forEach(t=>{
     $("pane-"+t).style.display=t===tab?"block":"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
   if(tab==="dos")renderDossiers();
+  if(tab==="cot")renderCotisations();
   if(tab==="profil")renderProfil();
 };
 
@@ -705,9 +713,104 @@ function renderProfil(){
   `;
 }
 
+// ══════════════════════════════════════════
+// ── ONGLET COTISATIONS
+// ══════════════════════════════════════════
+async function renderCotisations(){
+  if(!currentUser?.alafiaId){
+    $("cot-content").innerHTML='<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">Aucune cotisation.<br>Votre compte n\'est pas encore validé.</div></div>';
+    return;
+  }
+  showOv("Chargement cotisations...");
+  const snap=await getDocs(query(collection(db,"cotisations"),where("patientId","==",currentUser.alafiaId)));
+  hideOv();
+  const cots=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  cots.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  const totalEnvoye=cots.reduce((s,c)=>s+(c.montant||0),0);
+  
+  $("cot-content").innerHTML=`
+    <div class="form-section">
+      <div class="form-title">Envoyer une cotisation</div>
+      <div class="form-sub">Payez librement le montant que vous souhaitez à votre assurance</div>
+      <label class="lbl">Montant à envoyer (FCFA)</label>
+      <input class="inp" id="cot-montant" type="number" placeholder="Ex: 5000" min="100"/>
+      ${currentUser.compagnie?`<div style="font-size:12px;color:var(--text-soft);margin-bottom:12px">Vers : <strong>${currentUser.compagnie}</strong></div>`:""}
+      <button class="btn btn-gold" onclick="openCotisationMomo()">📱 Payer via MTN MoMo</button>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">Historique de mes paiements</div>
+      ${cots.length===0?
+        `<div class="empty"><div class="empty-icon">📜</div><div style="font-size:13px">Aucun paiement pour le moment</div></div>`:
+        `
+        <div style="padding:10px 14px;background:var(--gold-light);border-radius:var(--radius-sm);margin-bottom:12px;display:flex;justify-content:space-between">
+          <span style="font-size:13px;color:var(--gold-dark)">Total envoyé</span>
+          <strong style="color:var(--gold-dark)">${fmt(totalEnvoye)} FCFA</strong>
+        </div>
+        ${cots.map(c=>`
+          <div style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--gold)">+${fmt(c.montant)} FCFA</div>
+              <div style="font-size:11px;color:var(--text-soft);margin-top:2px">📅 ${fdate(c.createdAt)}</div>
+            </div>
+            <span class="chip chip-ok">✓ Envoyé</span>
+          </div>`).join("")}
+        `}
+    </div>
+  `;
+}
+
+window.openCotisationMomo=async()=>{
+  const montant=parseInt($("cot-montant").value);
+  if(!montant||montant<100){
+    showToast("⚠️ Entrez un montant valide (min 100 FCFA)","#D63031");
+    return;
+  }
+  
+  // Récupérer le numéro MoMo de l'assurance
+  if(!currentUser.compagnie){
+    showToast("❌ Compagnie d'assurance non trouvée","#D63031");
+    return;
+  }
+  
+  showOv("Récupération des infos...");
+  const snapAss=await getDocs(query(collection(db,"assurances"),where("nom","==",currentUser.compagnie)));
+  hideOv();
+  
+  if(snapAss.empty){
+    showToast("❌ Assurance non trouvée","#D63031");
+    return;
+  }
+  
+  const assurance=snapAss.docs[0].data();
+  if(!assurance.momoNumber){
+    showToast("❌ Numéro MoMo de l'assurance non configuré","#D63031");
+    return;
+  }
+  
+  // Ouvrir le modal MoMo avec destination="assurance"
+  openMomo(null,montant,assurance.momoNumber,"assurance");
+};
+
+async function saveCotisation(montant){
+  if(!currentUser?.alafiaId||!currentUser.compagnie)return;
+  
+  const cot={
+    patientId:currentUser.alafiaId,
+    assuranceNom:currentUser.compagnie,
+    montant:montant,
+    createdAt:new Date()
+  };
+  
+  await addDoc(collection(db,"cotisations"),cot);
+}
+
 // ── MOMO PAIEMENT ──
-window.openMomo=(docId,montant,num)=>{
+let momoDestination=null; // "hopital" ou "assurance"
+
+window.openMomo=(docId,montant,num,destination="hopital")=>{
   momoDocId=docId;
+  momoDestination=destination;
   $("momo-amount").textContent=fmt(montant);
   $("momo-num").textContent=num;
   ["momo-s1","momo-s2","momo-s3"].forEach(s=>$("momo-"+s.split("-")[1]).classList.remove("active"));
@@ -721,13 +824,24 @@ window.momoStep=async(step)=>{
   $("momo-s3").classList.toggle("active",step===3);
   if(step===2){
     setTimeout(async()=>{
-      if(momoDocId){
+      if(momoDestination==="hopital"&&momoDocId){
+        // Paiement du reste à charge → hôpital
         await updateDoc(doc(db,"dossiers",momoDocId),{paye:true,payeAt:new Date()});
         $("momo-s1").classList.remove("active");
         $("momo-s2").classList.remove("active");
         $("momo-s3").classList.add("active");
         showToast("✅ Paiement MoMo confirmé !","#0A7C5C");
         renderDossiers();
+      }else if(momoDestination==="assurance"){
+        // Paiement cotisation → assurance
+        const montant=parseInt($("momo-amount").textContent.replace(/\s/g,""));
+        await saveCotisation(montant);
+        $("momo-s1").classList.remove("active");
+        $("momo-s2").classList.remove("active");
+        $("momo-s3").classList.add("active");
+        showToast("✅ Cotisation envoyée !","#0A7C5C");
+        $("cot-montant").value="";
+        renderCotisations();
       }
     },2500);
   }
