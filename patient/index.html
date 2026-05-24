@@ -681,37 +681,143 @@ async function renderDossiers(){
 }
 
 // ── ONGLET PROFIL ──
+let profiltEditMode=false;
+
 function renderProfil(){
   const u=currentUser;
-  $("profil-content").innerHTML=`
-    <div class="form-section">
-      <div class="form-title">Identité</div>
-      <div class="profil-row"><span class="profil-label">Nom complet</span><span class="profil-val">${u.prenom} ${u.nom}</span></div>
-      <div class="profil-row"><span class="profil-label">Téléphone</span><span class="profil-val">${u.tel}</span></div>
-      ${u.alafiaId?`<div class="profil-row"><span class="profil-label">Identifiant Alafia</span><span class="profil-val" style="font-family:var(--mono);color:var(--green)">${u.alafiaId}</span></div>`:""}
-      ${u.ddn?`<div class="profil-row"><span class="profil-label">Date de naissance</span><span class="profil-val">${u.ddn}</span></div>`:""}
-      ${u.npi?`<div class="profil-row"><span class="profil-label">NPI</span><span class="profil-val">${u.npi}</span></div>`:""}
-    </div>
-    <div class="form-section">
-      <div class="form-title">Assurance</div>
-      <div class="profil-row"><span class="profil-label">Compagnie</span><span class="profil-val">${u.compagnie||"—"}</span></div>
-      <div class="profil-row"><span class="profil-label">N° de police</span><span class="profil-val">${u.police||"—"}</span></div>
-      <div class="profil-row"><span class="profil-label">Statut</span><span class="chip chip-${u.statut==="validé"||u.assuranceValide?"ok":"pending"}">${u.assuranceValide?"✓ Validée":"En attente"}</span></div>
-      ${u.assuranceTaux?`<div class="profil-row"><span class="profil-label">Taux de couverture</span><span class="profil-val" style="color:var(--green)">${u.assuranceTaux}%</span></div>`:""}
-      ${u.assurancePlafond?`<div class="profil-row"><span class="profil-label">Plafond annuel</span><span class="profil-val">${fmt(u.assurancePlafond)} FCFA</span></div>`:""}
-    </div>
-    <div class="form-section">
-      <div class="form-title">💳 Mobile Money</div>
-      <div class="profil-row"><span class="profil-label">Numéro MoMo MTN</span><span class="profil-val">${u.momo||"Non renseigné"}</span></div>
-    </div>
-    <div class="form-section">
-      <div class="form-title">🩺 Informations médicales</div>
-      <div class="profil-row"><span class="profil-label">Groupe sanguin</span><span class="profil-val">${u.groupeSanguin||"—"}</span></div>
-      <div class="profil-row"><span class="profil-label">Allergies</span><span class="profil-val">${u.allergies||"—"}</span></div>
-      <div class="profil-row" style="border:none"><span class="profil-label">Antécédents</span><span class="profil-val">${u.antecedents||"—"}</span></div>
-    </div>
-  `;
+  
+  if(!profiltEditMode){
+    // MODE CONSULTATION
+    $("profil-content").innerHTML=`
+      <div class="form-section">
+        <div class="form-title">Identité</div>
+        <div class="profil-row"><span class="profil-label">Nom complet</span><span class="profil-val">${u.prenom} ${u.nom}</span></div>
+        <div class="profil-row"><span class="profil-label">Téléphone</span><span class="profil-val">${u.tel}</span></div>
+        ${u.alafiaId?`<div class="profil-row"><span class="profil-label">Identifiant Alafia</span><span class="profil-val" style="font-family:var(--mono);color:var(--green)">${u.alafiaId}</span></div>`:""}
+        ${u.ddn?`<div class="profil-row"><span class="profil-label">Date de naissance</span><span class="profil-val">${u.ddn}</span></div>`:""}
+        ${u.npi?`<div class="profil-row"><span class="profil-label">NPI</span><span class="profil-val">${u.npi}</span></div>`:""}
+      </div>
+      <div class="form-section">
+        <div class="form-title">Assurance</div>
+        <div class="profil-row"><span class="profil-label">Compagnie</span><span class="profil-val">${u.compagnie||"—"}</span></div>
+        <div class="profil-row"><span class="profil-label">N° de police</span><span class="profil-val">${u.police||"—"}</span></div>
+        <div class="profil-row"><span class="profil-label">Statut</span><span class="chip chip-${u.statut==="validé"||u.assuranceValide?"ok":"pending"}">${u.assuranceValide?"✓ Validée":"En attente"}</span></div>
+        ${u.assuranceTaux?`<div class="profil-row"><span class="profil-label">Taux de couverture</span><span class="profil-val" style="color:var(--green)">${u.assuranceTaux}%</span></div>`:""}
+        ${u.assurancePlafond?`<div class="profil-row"><span class="profil-label">Plafond annuel</span><span class="profil-val">${fmt(u.assurancePlafond)} FCFA</span></div>`:""}
+      </div>
+      <div class="form-section">
+        <div class="form-title">💳 Mobile Money</div>
+        <div class="profil-row"><span class="profil-label">Numéro MoMo MTN</span><span class="profil-val">${u.momo||"Non renseigné"}</span></div>
+      </div>
+      <div class="form-section">
+        <div class="form-title">🩺 Informations médicales</div>
+        <div class="profil-row"><span class="profil-label">Groupe sanguin</span><span class="profil-val">${u.groupeSanguin||"—"}</span></div>
+        <div class="profil-row"><span class="profil-label">Allergies</span><span class="profil-val">${u.allergies||"—"}</span></div>
+        <div class="profil-row" style="border:none"><span class="profil-label">Antécédents</span><span class="profil-val">${u.antecedents||"—"}</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="startEditProfil()" style="margin-top:1rem">✏️ Modifier mon profil</button>
+    `;
+  }else{
+    // MODE ÉDITION
+    $("profil-content").innerHTML=`
+      <div class="form-section">
+        <div class="form-title">Identité (lecture seule)</div>
+        <div class="profil-row"><span class="profil-label">Nom complet</span><span class="profil-val">${u.prenom} ${u.nom}</span></div>
+        <div class="profil-row"><span class="profil-label">Téléphone</span><span class="profil-val">${u.tel}</span></div>
+        ${u.alafiaId?`<div class="profil-row"><span class="profil-label">Identifiant Alafia</span><span class="profil-val" style="font-family:var(--mono);color:var(--green)">${u.alafiaId}</span></div>`:""}
+      </div>
+
+      <div class="form-section">
+        <div class="form-title">📱 Contact</div>
+        <label class="lbl">Numéro de téléphone</label>
+        <input class="inp" id="edit-tel" value="${u.tel}" type="tel"/>
+      </div>
+
+      <div class="form-section">
+        <div class="form-title">💳 Mobile Money</div>
+        <label class="lbl">Numéro MoMo MTN</label>
+        <input class="inp" id="edit-momo" value="${u.momo||""}" type="tel" placeholder="Ex: +229 96 00 00 00"/>
+      </div>
+
+      <div class="form-section">
+        <div class="form-title">🩺 Informations médicales</div>
+        <label class="lbl">Groupe sanguin</label>
+        <select class="inp" id="edit-groupe">
+          <option value="">Non renseigné</option>
+          <option ${u.groupeSanguin==="A+"?"selected":""}>A+</option>
+          <option ${u.groupeSanguin==="A-"?"selected":""}>A-</option>
+          <option ${u.groupeSanguin==="B+"?"selected":""}>B+</option>
+          <option ${u.groupeSanguin==="B-"?"selected":""}>B-</option>
+          <option ${u.groupeSanguin==="AB+"?"selected":""}>AB+</option>
+          <option ${u.groupeSanguin==="AB-"?"selected":""}>AB-</option>
+          <option ${u.groupeSanguin==="O+"?"selected":""}>O+</option>
+          <option ${u.groupeSanguin==="O-"?"selected":""}>O-</option>
+        </select>
+        <label class="lbl">Allergies connues</label>
+        <input class="inp" id="edit-allergies" value="${u.allergies||""}" placeholder="Ex: Pénicilline, arachides…"/>
+        <label class="lbl">Antécédents médicaux</label>
+        <input class="inp" id="edit-antecedents" value="${u.antecedents||""}" placeholder="Ex: Diabète, hypertension…"/>
+      </div>
+
+      <div id="edit-err" class="alert alert-err" style="display:none"></div>
+
+      <div style="display:flex;gap:10px;margin-top:1rem">
+        <button class="btn btn-secondary" onclick="cancelEditProfil()" style="flex:1">✕ Annuler</button>
+        <button class="btn btn-primary" onclick="saveProfil()" style="flex:1">✓ Enregistrer</button>
+      </div>
+    `;
+  }
 }
+
+window.startEditProfil=()=>{
+  profiltEditMode=true;
+  renderProfil();
+};
+
+window.cancelEditProfil=()=>{
+  profiltEditMode=false;
+  renderProfil();
+};
+
+window.saveProfil=async()=>{
+  const tel=$("edit-tel").value.trim();
+  const momo=$("edit-momo").value.trim();
+  const groupe=$("edit-groupe").value;
+  const allergies=$("edit-allergies").value.trim();
+  const antecedents=$("edit-antecedents").value.trim();
+  
+  const errEl=$("edit-err");
+  errEl.style.display="none";
+  
+  if(!tel){
+    errEl.textContent="Le téléphone est obligatoire.";
+    errEl.style.display="block";
+    return;
+  }
+  
+  showOv("Enregistrement...");
+  
+  await updateDoc(doc(db,"patients",currentUser._id),{
+    tel,
+    momo:momo||null,
+    groupeSanguin:groupe||null,
+    allergies:allergies||null,
+    antecedents:antecedents||null,
+    updatedAt:new Date()
+  });
+  
+  // Mettre à jour currentUser
+  currentUser.tel=tel;
+  currentUser.momo=momo||null;
+  currentUser.groupeSanguin=groupe||null;
+  currentUser.allergies=allergies||null;
+  currentUser.antecedents=antecedents||null;
+  
+  hideOv();
+  profiltEditMode=false;
+  showToast("✅ Profil mis à jour !","#0A7C5C");
+  renderProfil();
+};
 
 // ══════════════════════════════════════════
 // ── ONGLET COTISATIONS
