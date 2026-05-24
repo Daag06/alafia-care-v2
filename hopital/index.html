@@ -246,15 +246,13 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active" id="tab-nouveau" onclick="switchTab('nouveau')">➕ Nouveau dossier</button>
-    <button class="tab" id="tab-historique" onclick="switchTab('historique')">📋 Historique <span id="hist-badge" class="tab-badge" style="display:none">!</span></button>
+    <button class="tab active" id="tab-recherche" onclick="switchTab('recherche')">🔍 Rechercher patient</button>
     <button class="tab" id="tab-dossiers" onclick="switchTab('dossiers')">📂 Dossiers médicaux</button>
     <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
-  <!-- ── ONGLET NOUVEAU DOSSIER ── -->
-  <div id="pane-nouveau" style="flex:1;overflow-y:auto">
-    <div class="content-wide">
+  <!-- ── ONGLET RECHERCHER PATIENT ── -->
+  <div id="pane-recherche" style="flex:1;overflow-y:auto">
 
       <!-- Zone recherche -->
       <div id="search-zone">
@@ -297,19 +295,6 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
       <!-- Message succès -->
       <div id="success-msg" style="display:none"></div>
 
-    </div>
-  </div>
-
-  <!-- ── ONGLET HISTORIQUE ── -->
-  <div id="pane-historique" style="display:none;flex:1;overflow-y:auto">
-    <div class="content-wide">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
-        <button class="btn btn-secondary btn-sm" id="f-tous" onclick="hFilter('tous')" style="flex:1">Tous</button>
-        <button class="btn btn-secondary btn-sm" id="f-attente" onclick="hFilter('en attente')" style="flex:1">En attente</button>
-        <button class="btn btn-secondary btn-sm" id="f-valide" onclick="hFilter('validé')" style="flex:1">Validés</button>
-        <button class="btn btn-secondary btn-sm" id="f-rejete" onclick="hFilter('rejeté')" style="flex:1">Rejetés</button>
-      </div>
-      <div id="hist-list"></div>
     </div>
   </div>
 
@@ -376,12 +361,11 @@ const showToast=(msg,color="#1A1A2E")=>{
 
 // ── NAVIGATION ──
 window.switchTab=tab=>{
-  ["nouveau","historique","dossiers","stats"].forEach(t=>{
+  ["recherche","dossiers","stats"].forEach(t=>{
     $("pane-"+t).style.display=t===tab?"flex":"none";
     $("tab-"+t).classList.toggle("active",t===tab);
   });
-  if(tab==="nouveau") hReset();
-  if(tab==="historique") renderHistorique();
+  if(tab==="recherche") hReset();
   if(tab==="dossiers") renderDossiersHopital();
   if(tab==="stats") renderStats();
 };
@@ -451,8 +435,8 @@ window.cancel2FA=async()=>{
 function initDash(){
   $("dash-hopital-nom").textContent=currentHopital.nom;
   $("dash-hopital-ville").textContent=currentHopital.ville||"";
-  switchTab("nouveau");
-  renderActes();
+  switchTab("recherche");
+  // renderActes(); // ❌ On enlève ça, pas besoin pour recherche
   // Listener temps réel
   if(unsubDossiers)unsubDossiers();
   unsubDossiers=onSnapshot(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)),snap=>{
@@ -478,40 +462,6 @@ window.doLogout=async()=>{
   go("s-login");
 };
 
-// ── ACTES GRID ──
-function renderActes(){
-  $("actes-grid").innerHTML=ACTES.map(a=>`
-    <label class="acte-item" id="acte-${a.replace(/\s/g,'_')}">
-      <input type="checkbox" onchange="tAct('${a}')"/> ${a}
-    </label>`).join("");
-}
-
-window.tAct=a=>{
-  hAct.includes(a)?hAct=hAct.filter(x=>x!==a):hAct.push(a);
-  const id="acte-"+a.replace(/\s/g,'_');
-  $(id)?.classList.toggle("selected",hAct.includes(a));
-  checkAutoVal();
-};
-
-window.checkAutoVal=()=>{
-  if(!hPt||!hPt.assuranceValide)return;
-  const mnt=parseInt($("h-mnt").value)||0;
-  const info=$("auto-info");
-  if(mnt<=0){info.style.display="none";return;}
-  if(mnt<=hPt.assurancePlafond){
-    const r=Math.round(mnt*hPt.assuranceTaux/100);
-    info.className="alert alert-auto";
-    info.style.display="block";
-    info.innerHTML=`⚡ Validation automatique — Remboursement estimé : <strong>${fmt(r)} FCFA</strong> (${hPt.assuranceTaux}%)`;
-    $("submit-btn").textContent="⚡ Valider automatiquement";
-  }else{
-    info.className="alert alert-warn";
-    info.style.display="block";
-    info.innerHTML=`⚠️ Montant dépasse le plafond disponible (${fmt(hPt.assurancePlafond)} FCFA). Le dossier sera envoyé pour validation manuelle.`;
-    $("submit-btn").textContent="Envoyer à l'assurance →";
-  }
-};
-
 // ── RECHERCHE PATIENT ──
 window.hSearch=async()=>{
   const q=$("h-pid").value.trim();
@@ -522,52 +472,34 @@ window.hSearch=async()=>{
   hideOv();
   const all=pts.docs.map(d=>({...d.data(),_id:d.id}));
   const p=all.find(x=>x.alafiaId&&(x.alafiaId===q.toUpperCase()||x.tel===q));
-  if(p){
-    const consent=await showConsentModal(p);
-    if(!consent){$("h-err").textContent="Accès aux données refusé par le patient.";$("h-err").style.display="block";return;}
-    loadPatientForm(p);
-  }else{
-    const any=all.find(x=>x.tel===q);
-    if(any&&any.statut==="en_attente") $("h-err").textContent="Ce patient est en attente de validation par son assurance.";
-    else $("h-err").textContent="Patient introuvable. Vérifiez l'identifiant ou le numéro.";
+  
+  if(!p){
+    // ❌ Patient pas trouvé
+    $("h-err").textContent="Patient introuvable dans le système. L'assurance doit l'ajouter d'abord.";
     $("h-err").style.display="block";
+    return;
+  }
+  
+  // ✅ Patient trouvé
+  showOv("Vérification du dossier...");
+  
+  // Cherche si le patient a déjà un dossier avec un épisode en cours à cet hôpital
+  const hasEpisodeHere=p.episodes&&p.episodes.some(ep=>ep.hopitalId===currentHopital._id);
+  
+  hideOv();
+  
+  if(hasEpisodeHere){
+    // ✅ Patient a un dossier ici → Redirection auto
+    showToast("Patient trouvé ! Redirection...","#0A7C5C");
+    hPt=p;
+    openPatientDossier(p);
+  }else{
+    // ❌ Patient trouvé mais PAS de dossier ici → Affiche bouton créer
+    hPt=p;
+    showCreateDossierButton(p);
   }
 };
 
-function loadPatientForm(p){
-  hPt=p;hAct=[];
-  // Reset actes
-  ACTES.forEach(a=>document.getElementById("acte-"+a.replace(/\s/g,'_'))?.classList.remove("selected"));
-  $("h-mnt").value="";
-  $("auto-info").style.display="none";
-  $("form-err").style.display="none";
-
-  const auto=p.assuranceValide;
-  const medInfo=[];
-  if(p.groupeSanguin) medInfo.push(`🩸 Groupe sanguin : <strong>${p.groupeSanguin}</strong>`);
-  if(p.allergies) medInfo.push(`⚠️ Allergies : <strong>${p.allergies}</strong>`);
-  if(p.antecedents) medInfo.push(`📋 Antécédents : <strong>${p.antecedents}</strong>`);
-
-  $("patient-card").className="patient-found "+(auto?"patient-found-auto":"patient-found-std");
-  $("patient-card").innerHTML=`
-    <div class="patient-badge" style="color:${auto?"var(--purple)":"var(--green)"}">✓ PATIENT IDENTIFIÉ — Accès consenti</div>
-    <div class="patient-name">${p.prenom} ${p.nom}</div>
-    <div class="patient-info">ID : ${p.alafiaId} &nbsp;·&nbsp; ${p.tel}</div>
-    <div class="chips-row">
-      ${auto
-        ?`<span class="chip chip-auto">⚡ ${p.assuranceType}</span>
-           <span class="chip chip-ok">${p.assuranceTaux}% couvert</span>
-           <span class="chip chip-info">Plafond : ${fmt(p.assurancePlafond)} FCFA</span>`
-        :'<span class="chip chip-ok">✓ Compte actif</span>'}
-    </div>
-    ${medInfo.length>0?`<div class="med-info">${medInfo.join("<br/>")}</div>`:""}
-    ${auto?'<div style="font-size:11px;color:var(--purple);margin-top:8px;font-weight:600">⚡ Validation automatique si montant ≤ plafond</div>':""}
-  `;
-
-  $("search-zone").style.display="none";
-  $("form-zone").style.display="block";
-  $("submit-btn").textContent=auto?"⚡ Valider automatiquement":"Envoyer à l'assurance →";
-}
 
 // ── CONSENTEMENT ──
 function showConsentModal(p){
@@ -598,156 +530,489 @@ function showConsentModal(p){
   });
 }
 
-// ── SOUMETTRE DOSSIER ──
-window.hSubmit=async()=>{
-  $("form-err").style.display="none";
-  const mnt=parseInt($("h-mnt").value);
-  if(!hPt||hAct.length===0||!mnt||mnt<=0){
-    $("form-err").textContent="Sélectionnez au moins un acte et entrez un montant valide.";
-    $("form-err").style.display="block";return;
-  }
-  const auto=hPt.assuranceValide&&mnt<=hPt.assurancePlafond;
-  const remb=auto?Math.round(mnt*hPt.assuranceTaux/100):null;
-  showOv(auto?"Validation automatique...":"Envoi à l'assurance...");
-  await addDoc(collection(db,"dossiers"),{
-    patientId:hPt.alafiaId,
-    patientNom:hPt.prenom+" "+hPt.nom,
-    hopital:currentHopital.nom,
-    hopitalId:currentHopital._id,
-    hopitalVille:currentHopital.ville||"",
-    actes:[...hAct],
-    montant:mnt,
-    statut:auto?"validé":"en attente",
-    autoValidated:auto,
-    remboursement:remb,
-    couverture:hPt.assuranceTaux||null,
-    assuranceCompagnie:hPt.compagnie||null,
-    createdAt:new Date(),
-    updatedAt:new Date()
-  });
-  hideOv();
-  hReset();
-  const msg=$("success-msg");
-  msg.innerHTML=auto
-    ?`<div class="alert alert-auto" style="border-radius:var(--radius)">⚡ Dossier validé automatiquement ! Remboursement : <strong>${fmt(remb)} FCFA</strong> (${hPt?.assuranceTaux}%)</div>`
-    :`<div class="alert alert-ok" style="border-radius:var(--radius)">✅ Dossier transmis à l'assurance avec succès. Traitement sous 48h.</div>`;
-  msg.style.display="block";
-  setTimeout(()=>msg.style.display="none",6000);
-  showToast(auto?"⚡ Validé automatiquement !":"✅ Dossier envoyé à l'assurance","#0A7C5C");
-};
-
 window.hReset=()=>{
   hPt=null;hAct=[];
-  $("h-pid").value="";$("h-mnt").value="";
+  $("h-pid").value="";
   $("h-err").style.display="none";
-  $("form-err").style.display="none";
-  $("auto-info").style.display="none";
   $("search-zone").style.display="block";
   $("form-zone").style.display="none";
-  ACTES.forEach(a=>document.getElementById("acte-"+a.replace(/\s/g,'_'))?.classList.remove("selected"));
+  const createBtn=$("create-dossier-btn");
+  if(createBtn) createBtn.style.display="none";
 };
 
-// ── HISTORIQUE ──
-let currentFilter="tous";
-window.hFilter=filter=>{
-  currentFilter=filter;
-  ["tous","attente","valide","rejete"].forEach(f=>{
-    const btn=$("f-"+f);
-    if(btn) btn.style.background=f===filter||
-      (filter==="en attente"&&f==="attente")||
-      (filter==="validé"&&f==="valide")||
-      (filter==="rejeté"&&f==="rejete")
-      ?"var(--blue)":""
-    ,btn.style.color=f===filter||
-      (filter==="en attente"&&f==="attente")||
-      (filter==="validé"&&f==="valide")||
-      (filter==="rejeté"&&f==="rejete")
-      ?"white":"";
-  });
-  renderHistorique();
+// ══════════════════════════════════════════
+// ── AFFICHER BOUTON CRÉER DOSSIER
+// ══════════════════════════════════════════
+function showCreateDossierButton(p){
+  $("search-zone").style.display="none";
+  $("form-zone").style.display="block";
+  $("form-zone").innerHTML=`
+    <button class="back-btn" onclick="hReset()">← Nouvelle recherche</button>
+    <div class="card">
+      <div class="card-title">✓ Patient trouvé</div>
+      <div class="patient-found patient-found-std" style="margin-bottom:1rem">
+        <div class="patient-name">${p.prenom} ${p.nom}</div>
+        <div class="patient-info">ID : ${p.alafiaId} • ${p.tel}</div>
+      </div>
+      <div id="create-dossier-msg" class="alert alert-info">
+        ℹ️ Ce patient n'a pas encore de dossier médical à ${currentHopital.nom}
+      </div>
+      <button class="btn btn-green" onclick="createNewDossier()" style="width:100%;margin-top:1rem">➕ Créer dossier médical</button>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════
+// ── CRÉER NOUVEAU DOSSIER + 1ER ÉPISODE
+// ══════════════════════════════════════════
+window.createNewDossier=()=>{
+  if(!hPt) return;
+  $("form-zone").innerHTML=`
+    <button class="back-btn" onclick="hReset()">← Nouvelle recherche</button>
+    <div class="card">
+      <div class="card-title">➕ Créer dossier médical</div>
+      <div class="patient-found patient-found-std" style="margin-bottom:1rem">
+        <div class="patient-name">${hPt.prenom} ${hPt.nom}</div>
+        <div class="patient-info">ID : ${hPt.alafiaId}</div>
+      </div>
+      <div style="margin-bottom:1rem;padding:12px;background:var(--bg);border-radius:10px;border-left:3px solid var(--blue)">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px;font-weight:600">📋 1ER ÉPISODE</div>
+        <div style="font-size:13px;color:var(--text-mid)">Remplissez les informations du motif</div>
+      </div>
+      
+      <label class="lbl">Motif de la visite *</label>
+      <input class="inp" id="motif-input" type="text" placeholder="Ex: Douleurs abdominales" />
+      
+      <label class="lbl">Détails (optionnel)</label>
+      <textarea class="inp" id="details-input" placeholder="Ex: Examen clinique complet..." style="height:80px;resize:vertical"></textarea>
+      
+      <label class="lbl">Type d'acte *</label>
+      <select class="inp" id="acte-select" style="cursor:pointer">
+        <option value="">-- Sélectionner un acte --</option>
+        ${ACTES.map(a=>`<option value="${a}">${a}</option>`).join("")}
+      </select>
+      
+      <label class="lbl">Montant (FCFA) *</label>
+      <input class="inp" id="montant-input" type="number" placeholder="Ex: 20000" />
+      
+      <div id="create-err" class="alert alert-err" style="display:none"></div>
+      
+      <div style="display:flex;gap:10px;margin-top:1rem">
+        <button class="btn btn-secondary" onclick="hReset()" style="flex:1">Annuler</button>
+        <button class="btn btn-green" onclick="submitNewDossier()" style="flex:2">✅ Créer dossier</button>
+      </div>
+    </div>
+  `;
 };
 
-async function renderHistorique(){
-  showOv("Chargement...");
-  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
-  hideOv();
-  let dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
-  if(currentFilter!=="tous") dos=dos.filter(d=>d.statut===currentFilter);
-  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
-  if(dos.length===0){
-    $("hist-list").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Aucun dossier trouvé</div></div>';
+// ══════════════════════════════════════════
+// ── SOUMETTRE NOUVEAU DOSSIER
+// ══════════════════════════════════════════
+window.submitNewDossier=async()=>{
+  const motif=$("motif-input").value.trim();
+  const details=$("details-input").value.trim();
+  const acte=$("acte-select").value;
+  const montant=parseInt($("montant-input").value);
+  const errDiv=$("create-err");
+  
+  errDiv.style.display="none";
+  
+  if(!motif){
+    errDiv.textContent="Le motif est obligatoire.";
+    errDiv.style.display="block";
     return;
   }
-  $("hist-list").innerHTML=dos.map(d=>`
-    <div class="dossier-row">
-      <div class="dossier-head">
-        <div class="dossier-patient">${d.patientNom||"—"}</div>
-        <div style="display:flex;gap:4px;align-items:center">
-          ${d.autoValidated?'<span class="chip chip-auto">⚡</span>':""}
-          <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
-        </div>
-      </div>
-      <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
-      <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
-      <div class="dossier-montants">
-        <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
-        ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
-      </div>
-    </div>`).join("");
-}
+  if(!acte){
+    errDiv.textContent="Sélectionnez un type d'acte.";
+    errDiv.style.display="block";
+    return;
+  }
+  if(!montant||montant<=0){
+    errDiv.textContent="Entrez un montant valide.";
+    errDiv.style.display="block";
+    return;
+  }
+  
+  if(!hPt) return;
+  
+  showOv("Création du dossier...");
+  
+  try{
+    // Calcule le remboursement
+    const remb=hPt.assuranceValide?Math.round(montant*hPt.assuranceTaux/100):null;
+    
+    // Crée le 1er acte
+    const acteObj={
+      id:"acte_"+Date.now(),
+      type:acte,
+      motif:motif,
+      details:details,
+      montant:montant,
+      remboursement:remb||0,
+      date:new Date(),
+      heure:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})
+    };
+    
+    // Crée le 1er épisode
+    const episode={
+      id:"episode_"+currentHopital._id+"_"+Date.now(),
+      hopitalId:currentHopital._id,
+      hopitalNom:currentHopital.nom,
+      dateDebut:new Date(),
+      heureDebut:acteObj.heure,
+      statut:"en cours",
+      actes:[acteObj],
+      paiements:[],
+      totalMontant:montant,
+      totalRemboursement:remb||0,
+      totalPayéPatient:0
+    };
+    
+    // Ajoute l'épisode au patient
+    const patientRef=doc(db,"patients",hPt._id);
+    const episodes=hPt.episodes||[];
+    episodes.push(episode);
+    
+    await updateDoc(patientRef,{
+      episodes:episodes,
+      updatedAt:new Date()
+    });
+    
+    hideOv();
+    showToast("✅ Dossier créé ! Redirection...","#0A7C5C");
+    
+    // Recharge le patient et ouvre son dossier
+    const updated=await getDoc(patientRef);
+    hPt={...updated.data(),_id:updated.id};
+    openPatientDossier(hPt);
+    
+  }catch(e){
+    hideOv();
+    errDiv.textContent="Erreur lors de la création. Réessayez.";
+    errDiv.style.display="block";
+    console.error(e);
+  }
+};
+
+// ══════════════════════════════════════════
+// ── OUVRIR DOSSIER PATIENT
+// ══════════════════════════════════════════
+function openPatientDossier(p){
+  // Pour maintenant, juste afficher le dossier dans "Dossiers médicaux"
+  switchTab("dossiers");
+  // On va améliorer ça dans la prochaine étape
+};
 
 // ══════════════════════════════════════════
 // ── ONGLET DOSSIERS MÉDICAUX (HÔPITAL)
 // ══════════════════════════════════════════
 async function renderDossiersHopital(){
   showOv("Chargement dossiers médicaux...");
-  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  const pts=await getDocs(collection(db,"patients"));
   hideOv();
-  const dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
-  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
-  if(dos.length===0){
+  
+  // Filtre patients qui ont au moins un épisode à cet hôpital
+  let patients=pts.docs
+    .map(d=>({...d.data(),_id:d.id}))
+    .filter(p=>p.episodes&&p.episodes.some(ep=>ep.hopitalId===currentHopital._id));
+  
+  // Trie par date (plus récent d'abord)
+  patients.sort((a,b)=>{
+    const lastEpA=a.episodes[a.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    const lastEpB=b.episodes[b.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    return lastEpB-lastEpA;
+  });
+  
+  if(patients.length===0){
     $("dossiers-list").innerHTML='<div class="empty"><div class="empty-icon">📂</div><div style="font-size:14px">Aucun dossier médical</div></div>';
     return;
   }
-  $("dossiers-list").innerHTML=dos.map(d=>{
-    const resteACharge=d.montant-(d.remboursement||0);
-    const paiements=d.paiements||[];
+  
+  // Affiche la liste des patients
+  $("dossiers-list").innerHTML=`
+    <div style="margin-bottom:1rem">
+      <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..." 
+        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:12px"
+        oninput="filterPatients()"/>
+    </div>
+    <div id="patients-list-container"></div>
+  `;
+  
+  displayPatientsList(patients);
+};
+
+function displayPatientsList(patients){
+  const searchInput=$("search-patient-input").value.trim().toLowerCase();
+  const filtered=patients.filter(p=>{
+    const nom=((p.prenom||"")+" "+(p.nom||"")).toLowerCase();
+    const id=(p.alafiaId||"").toLowerCase();
+    return nom.includes(searchInput)||id.includes(searchInput);
+  });
+  
+  if(filtered.length===0){
+    $("patients-list-container").innerHTML='<div class="empty"><div class="empty-icon">👤</div><div style="font-size:14px">Aucun patient trouvé</div></div>';
+    return;
+  }
+  
+  $("patients-list-container").innerHTML=filtered.map(p=>{
+    // Cherche l'épisode EN COURS pour cet hôpital
+    const episodes=p.episodes.filter(ep=>ep.hopitalId===currentHopital._id);
+    const episodeEnCours=episodes.find(ep=>ep.statut==="en cours");
+    const reste=episodeEnCours?episodeEnCours.totalMontant-episodeEnCours.totalPayéPatient:0;
     
     return `
-      <div class="dossier-row">
+      <div class="dossier-row" style="cursor:pointer" onclick="openPatientEpisodes('${p._id}')">
         <div class="dossier-head">
-          <div class="dossier-patient">${d.patientNom||"—"}</div>
-          <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
-        </div>
-        <div class="dossier-date">📅 ${fdate(d.createdAt)}</div>
-        <div class="dossier-actes">${(d.actes||[]).join(" · ")}</div>
-        <div class="dossier-montants">
-          <div><div class="m-label">Montant</div><div class="m-val">${fmt(d.montant)} FCFA</div></div>
-          ${d.remboursement!=null?`<div style="text-align:right"><div class="m-label">Remboursé</div><div class="m-val m-remb">+${fmt(d.remboursement)} FCFA</div></div>`:""}
-        </div>
-        ${resteACharge>0?`
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-            <div style="font-size:12px;color:var(--text-soft);margin-bottom:6px;font-weight:600">💰 Reste à charge : <strong style="color:var(--gold)">${fmt(resteACharge)} FCFA</strong></div>
-            <div style="font-size:12px;color:var(--text-soft);margin-bottom:8px;font-weight:600">📋 Paiements effectués :</div>
-            ${paiements.length>0?`
-              <div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:10px">
-                ${paiements.map(p=>`
-                  <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
-                    <span>${p.type==="momo"?"📱 MoMo":"💵 Cash"} : <strong>${fmt(p.montant)} FCFA</strong></span>
-                    <span style="color:var(--text-soft);font-size:11px">${fdate(p.date)}</span>
-                  </div>`).join("")}
-              </div>
-            `:`
-              <div style="font-size:12px;color:var(--text-soft);padding:8px;background:var(--bg);border-radius:8px;margin-bottom:10px">Aucun paiement enregistré</div>
-            `}
-            ${paiements.filter(p=>p.type==="cash").length===0?`
-              <button class="btn btn-secondary btn-sm" onclick="confirmerCashModal('${d._id}', ${resteACharge})" style="width:100%">✅ Confirmer paiement cash</button>
-            `:""}
+          <div>
+            <div class="dossier-patient">${p.prenom} ${p.nom}</div>
+            <div style="font-size:11px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId}</div>
           </div>
-        `:""}
-      </div>`;
+          <div style="text-align:right">
+            ${episodeEnCours?`<span class="chip chip-pending">🔴 EN COURS (${fmt(reste)} FCFA)</span>`:`<span class="chip chip-ok">✅ COMPLÉTÉ</span>`}
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:8px">
+          ${episodes.length} épisode(s) à ${currentHopital.nom}
+        </div>
+      </div>
+    `;
   }).join("");
 }
+
+window.filterPatients=async()=>{
+  // Recharge pour filtrer
+  showOv("Filtrage...");
+  const pts=await getDocs(collection(db,"patients"));
+  hideOv();
+  
+  let patients=pts.docs
+    .map(d=>({...d.data(),_id:d.id}))
+    .filter(p=>p.episodes&&p.episodes.some(ep=>ep.hopitalId===currentHopital._id));
+  
+  patients.sort((a,b)=>{
+    const lastEpA=a.episodes[a.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    const lastEpB=b.episodes[b.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    return lastEpB-lastEpA;
+  });
+  
+  displayPatientsList(patients);
+};
+
+window.openPatientEpisodes=async(patientId)=>{
+  showOv("Ouverture du dossier...");
+  const patientRef=doc(db,"patients",patientId);
+  const patientSnap=await getDoc(patientRef);
+  hideOv();
+  
+  if(!patientSnap.exists()){
+    showToast("❌ Patient non trouvé","#D63031");
+    return;
+  }
+  
+  const patient={...patientSnap.data(),_id:patientSnap.id};
+  const episodes=patient.episodes.filter(ep=>ep.hopitalId===currentHopital._id);
+  
+  // Affiche le détail du patient + ses épisodes
+  displayPatientEpisodes(patient,episodes);
+};
+
+function displayPatientEpisodes(patient,episodes){
+  $("dossiers-list").innerHTML=`
+    <button class="back-btn" onclick="renderDossiersHopital()">← Retour à la liste</button>
+    
+    <div class="card">
+      <div style="margin-bottom:1rem">
+        <div style="font-size:14px;color:var(--text-soft);margin-bottom:4px">Patient</div>
+        <div class="patient-name">${patient.prenom} ${patient.nom}</div>
+        <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono)">${patient.alafiaId} • ${patient.tel}</div>
+      </div>
+      
+      <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:1rem">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:6px;font-weight:600">📊 Résumé</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <div>Épisodes : <strong>${episodes.length}</strong></div>
+          <div>En cours : <strong>${episodes.filter(e=>e.statut==="en cours").length}</strong></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="episodes-container"></div>
+  `;
+  
+  displayEpisodesList(patient,episodes);
+}
+
+function displayEpisodesList(patient,episodes){
+  if(episodes.length===0){
+    $("episodes-container").innerHTML='<div class="empty" style="margin-top:2rem"><div class="empty-icon">📭</div><div>Aucun épisode</div></div>';
+    return;
+  }
+  
+  $("episodes-container").innerHTML=episodes.map((ep,idx)=>{
+    const totalPayé=ep.paiements.reduce((s,p)=>s+p.montant,0);
+    const reste=ep.totalMontant-totalPayé;
+    
+    return `
+      <div class="card" style="cursor:pointer;border-left:4px solid ${ep.statut==="en cours"?"var(--gold)":"var(--green)"}" onclick="openEpisodeDetail('${patient._id}', '${ep.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">📅 ${new Date(ep.dateDebut.toDate?.()??ep.dateDebut).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})}</div>
+            <div style="font-size:12px;color:var(--text-soft);margin-top:4px">${ep.actes.length} acte(s) • ${fmt(ep.totalMontant)} FCFA</div>
+          </div>
+          <span class="chip ${ep.statut==="en cours"?"chip-pending":"chip-ok"}">${ep.statut==="en cours"?"🔴 EN COURS":"✅ COMPLÉTÉ"}</span>
+        </div>
+        ${ep.statut==="en cours"?`
+          <div style="background:var(--gold-light);border-radius:6px;padding:8px;margin-top:8px;font-size:12px;color:#7A4500">
+            💰 Reste à charge : <strong>${fmt(reste)} FCFA</strong>
+          </div>
+        `:""}
+      </div>
+    `;
+  }).join("");
+}
+
+window.openEpisodeDetail=async(patientId, episodeId)=>{
+  showOv("Chargement de l'épisode...");
+  const patientRef=doc(db,"patients",patientId);
+  const patientSnap=await getDoc(patientRef);
+  hideOv();
+  
+  if(!patientSnap.exists()){
+    showToast("❌ Patient non trouvé","#D63031");
+    return;
+  }
+  
+  const patient={...patientSnap.data(),_id:patientSnap.id};
+  const episode=patient.episodes.find(ep=>ep.id===episodeId);
+  
+  if(!episode){
+    showToast("❌ Épisode non trouvé","#D63031");
+    return;
+  }
+  
+  displayEpisodeDetail(patient,episode);
+};
+
+function displayEpisodeDetail(patient,episode){
+  const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+  const reste=episode.totalMontant-totalPayé;
+  
+  $("dossiers-list").innerHTML=`
+    <button class="back-btn" onclick="openPatientEpisodes('${patient._id}')">← Retour au patient</button>
+    
+    <div class="card">
+      <div style="margin-bottom:1rem">
+        <div style="font-size:14px;color:var(--text-soft);margin-bottom:4px">Patient</div>
+        <div class="patient-name">${patient.prenom} ${patient.nom}</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">${patient.alafiaId}</div>
+      </div>
+      
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+        <div style="font-size:13px;color:var(--text-soft);margin-bottom:6px;font-weight:600">🏥 Épisode</div>
+        <div style="font-size:14px;font-weight:600">${new Date(episode.dateDebut.toDate?.()??episode.dateDebut).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})} - ${episode.hopitalNom}</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">Statut :<span class="chip ${episode.statut==="en cours" ? "chip-pending" : "chip-ok"}"style="display:inline-flex;margin-left:6px">${episode.statut}</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">🩺 Historique médical</div>
+      <div id="actes-detail"></div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">💳 Historique paiements</div>
+      <div id="paiements-detail"></div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">📊 Résumé financier</div>
+      <div id="resume-detail"></div>
+    </div>
+    
+    ${episode.statut==="en cours"?`
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="openPatientEpisodes('${patient._id}')" style="flex:1">Retour</button>
+        <button class="btn btn-green" onclick="addActeToEpisode('${patient._id}', '${episode.id}')" style="flex:1">➕ Ajouter acte</button>
+      </div>
+    `:""}
+  `;
+  
+  // Affiche les détails
+  displayEpisodeContent(patient,episode);
+}
+
+function displayEpisodeContent(patient,episode){
+  // Actes
+  $("actes-detail").innerHTML=episode.actes.map(a=>`
+    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${a.type}</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">🕐 ${new Date(a.date.toDate?.()??a.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})} ${a.heure}</div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:6px;padding:10px;font-size:12px;line-height:1.6;color:var(--text-mid)">
+        <div style="margin-bottom:6px"><strong>Motif :</strong> ${a.motif}</div>
+        ${a.details?`<div style="margin-bottom:6px"><strong>Détails :</strong> ${a.details}</div>`:""}
+        <div style="padding-top:6px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+          <span>Montant : <strong>${fmt(a.montant)} FCFA</strong></span>
+          <span>Remboursé : <strong style="color:var(--green)">${fmt(a.remboursement)} FCFA</strong></span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+  
+  // Paiements
+  const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+  const reste=episode.totalMontant-totalPayé;
+  
+  if(episode.paiements.length===0){
+    $("paiements-detail").innerHTML='<div style="font-size:12px;color:var(--text-soft);padding:12px;background:var(--bg);border-radius:8px">Aucun paiement enregistré</div>';
+  }else{
+    $("paiements-detail").innerHTML=episode.paiements.map(p=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--bg);border-radius:8px;margin-bottom:8px;font-size:12px">
+        <div>
+          <div style="font-weight:600">${p.type==="momo"?"📱 MoMo":"💵 Cash"}</div>
+          <div style="color:var(--text-soft);font-size:11px">${new Date(p.date.toDate?.()??p.date).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})} ${p.heure||"--:--"}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:600">${fmt(p.montant)} FCFA</div>
+          <div style="color:var(--green);font-size:11px">✅ ${p.statut}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+  
+  // Résumé
+  $("resume-detail").innerHTML=`
+    <div style="background:var(--bg);border-radius:8px;padding:12px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span>Total :</span>
+        <strong>${fmt(episode.totalMontant)} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span>Remboursé assurance :</span>
+        <strong style="color:var(--green)">+${fmt(episode.totalRemboursement)} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text-soft)">
+        <span>Payé patient :</span>
+        <strong style="color:var(--text)">${fmt(totalPayé)} FCFA</strong>
+      </div>
+      ${reste>0?`
+        <div style="margin-top:10px;padding:10px;background:var(--gold-light);border-radius:6px;border-left:3px solid var(--gold)">
+          <div style="font-size:12px;color:#7A4500">
+            <strong>Reste à charge : ${fmt(reste)} FCFA</strong>
+          </div>
+        </div>
+      `:""}
+    </div>
+  `;
+}
+
+window.addActeToEpisode=async(patientId, episodeId)=>{
+  // À implémenter dans la prochaine étape
+  showToast("Feature en développement...","#1A56DB");
+};
 
 // ══════════════════════════════════════════
 // ── CONFIRMER PAIEMENT CASH
