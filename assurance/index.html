@@ -191,6 +191,29 @@ select.inp{cursor:pointer}
   </div>
 </div>
 
+<!-- ═══════════════ MODAL DÉTAIL PATIENT ═══════════════ -->
+<div id="patient-detail-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto">
+  <div style="background:white;width:100%;max-width:600px;border-radius:20px;padding:1.75rem;margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <div style="font-size:18px;font-weight:800" id="pdm-titre">Détail patient</div>
+      <button onclick="closePatientDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
+    </div>
+
+    <!-- Infos patient -->
+    <div id="pdm-infos"></div>
+
+    <!-- Tabs internes -->
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:1rem">
+      <button class="tab active" id="pdm-tab-dossiers" onclick="pdmTab('dossiers')" style="flex:1;padding:10px;font-size:13px">📋 Dossiers</button>
+      <button class="tab" id="pdm-tab-cotisations" onclick="pdmTab('cotisations')" style="flex:1;padding:10px;font-size:13px">💳 Cotisations</button>
+    </div>
+
+    <!-- Contenu tabs -->
+    <div id="pdm-dossiers"></div>
+    <div id="pdm-cotisations" style="display:none"></div>
+  </div>
+</div>
+
 <!-- ═══════════════ REJET MODAL ═══════════════ -->
 <div id="rejet-modal">
   <div id="rejet-box">
@@ -272,11 +295,6 @@ select.inp{cursor:pointer}
   <!-- ── ONGLET PATIENTS ASSURÉS ── -->
   <div id="pane-assures" style="display:none;flex:1;overflow-y:auto">
     <div class="content">
-      <div class="filter-row">
-        <button class="filter-btn active" id="fa-tous" onclick="filterAssures('tous')">Tous</button>
-        <button class="filter-btn" id="fa-valide" onclick="filterAssures('valide')">Validés</button>
-        <button class="filter-btn" id="fa-rejete" onclick="filterAssures('rejete')">Rejetés</button>
-      </div>
       <div id="assures-list"></div>
     </div>
   </div>
@@ -659,42 +677,166 @@ window.rejeterPatient=async(id,nom)=>{
 // ══════════════════════════════════════════
 // ── ONGLET 2 : PATIENTS ASSURÉS
 // ══════════════════════════════════════════
-let assuresFilterCurrent="tous";
-window.filterAssures=f=>{
-  assuresFilterCurrent=f;
-  ["tous","valide","rejete"].forEach(x=>{
-    $("fa-"+x)?.classList.toggle("active",x===f);
-  });
-  renderAssures();
-};
-
 async function renderAssures(){
   showOv("Chargement...");
-  const snap=await getDocs(query(collection(db,"patients"),where("compagnie","==",currentAssurance.nom)));
+  const [snapPts,snapForfaits]=await Promise.all([
+    getDocs(query(collection(db,"patients"),where("compagnie","==",currentAssurance.nom),where("assuranceValide","==",true))),
+    getDocs(query(collection(db,"forfaits"),where("assuranceNom","==",currentAssurance.nom)))
+  ]);
   hideOv();
-  let pts=snap.docs.map(d=>({...d.data(),_id:d.id})).filter(p=>p.statut!=="en_attente");
-  if(assuresFilterCurrent==="valide") pts=pts.filter(p=>p.assuranceValide);
-  if(assuresFilterCurrent==="rejete") pts=pts.filter(p=>p.statut==="rejete");
+  const pts=snapPts.docs.map(d=>({...d.data(),_id:d.id}));
+  const forfaits=snapForfaits.docs.map(d=>({...d.data(),_id:d.id}));
+
   if(pts.length===0){
-    $("assures-list").innerHTML='<div class="empty"><div class="empty-icon">👥</div><div style="font-size:14px">Aucun patient trouvé</div></div>';
+    $("assures-list").innerHTML='<div class="empty"><div class="empty-icon">👥</div><div style="font-size:14px">Aucun patient assuré</div></div>';
     return;
   }
-  $("assures-list").innerHTML=pts.map(p=>`
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div>
-          <div style="font-size:15px;font-weight:800">${p.prenom} ${p.nom}</div>
-          <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId||"—"} · ${p.tel}</div>
-        </div>
-        <span class="chip chip-${p.assuranceValide?"ok":"ko"}">${p.assuranceValide?"✓ Actif":"✕ Rejeté"}</span>
+
+  // Grouper les patients par forfait
+  const grouped={};
+  pts.forEach(p=>{
+    const key=p.assuranceType||"Sans forfait";
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push(p);
+  });
+
+  $("assures-list").innerHTML=Object.entries(grouped).map(([forfaitNom,patients])=>`
+    <div style="margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 14px;background:var(--orange-light);border-radius:var(--radius-sm);border-left:3px solid var(--orange)">
+        <span style="font-size:16px">📦</span>
+        <span style="font-size:14px;font-weight:800;color:var(--orange-dark)">${forfaitNom}</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--orange-dark)">${patients.length} patient${patients.length>1?"s":""}</span>
       </div>
-      ${p.assuranceValide?`
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-        <span class="chip chip-auto">⚡ ${p.assuranceType||"—"}</span>
-        <span class="chip chip-info">${p.assuranceTaux||"—"}% couvert</span>
-        <span class="chip chip-ok">Plafond ${fmt(p.assurancePlafond)} FCFA</span>
-      </div>`:""}
+      ${patients.map(p=>`
+        <div class="card" style="margin-bottom:8px;cursor:pointer" onclick="openPatientDetail('${p._id}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:14px;font-weight:800">${p.prenom} ${p.nom}</div>
+              <div style="font-size:11px;color:var(--text-soft);font-family:var(--mono);margin-top:2px">${p.alafiaId||"—"} · ${p.tel}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="text-align:right">
+                <div style="font-size:11px;color:var(--text-soft)">Couverture</div>
+                <div style="font-size:13px;font-weight:700;color:var(--green)">${p.assuranceTaux||"—"}%</div>
+              </div>
+              <span style="color:var(--border);font-size:18px">›</span>
+            </div>
+          </div>
+        </div>`).join("")}
     </div>`).join("");
+}
+
+// ══════════════════════════════════════════
+// ── MODAL DÉTAIL PATIENT
+// ══════════════════════════════════════════
+let currentPatientDetail=null;
+
+window.openPatientDetail=async(patientId)=>{
+  showOv("Chargement du dossier...");
+  const snap=await getDocs(collection(db,"patients"));
+  const p=snap.docs.map(d=>({...d.data(),_id:d.id})).find(x=>x._id===patientId);
+  if(!p){hideOv();return;}
+  currentPatientDetail=p;
+  hideOv();
+
+  // Infos patient
+  $("pdm-titre").textContent=p.prenom+" "+p.nom;
+  $("pdm-infos").innerHTML=`
+    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div><div class="detail-label">ID Alafia</div><div class="detail-val" style="color:var(--orange);font-family:var(--mono)">${p.alafiaId||"—"}</div></div>
+        <div><div class="detail-label">Téléphone</div><div class="detail-val">${p.tel||"—"}</div></div>
+        <div><div class="detail-label">Forfait</div><div class="detail-val">${p.assuranceType||"—"}</div></div>
+        <div><div class="detail-label">Taux couverture</div><div class="detail-val" style="color:var(--green)">${p.assuranceTaux||"—"}%</div></div>
+        <div><div class="detail-label">Plafond annuel</div><div class="detail-val">${fmt(p.assurancePlafond)} FCFA</div></div>
+        <div><div class="detail-label">MoMo MTN</div><div class="detail-val">${p.momo||"—"}</div></div>
+      </div>
+    </div>`;
+
+  // Ouvrir le modal
+  $("patient-detail-modal").style.display="flex";
+  pdmTab("dossiers");
+};
+
+window.closePatientDetail=()=>{
+  $("patient-detail-modal").style.display="none";
+  currentPatientDetail=null;
+};
+
+window.pdmTab=async(tab)=>{
+  $("pdm-dossiers").style.display=tab==="dossiers"?"block":"none";
+  $("pdm-cotisations").style.display=tab==="cotisations"?"block":"none";
+  $("pdm-tab-dossiers").classList.toggle("active",tab==="dossiers");
+  $("pdm-tab-cotisations").classList.toggle("active",tab==="cotisations");
+
+  if(tab==="dossiers") await loadPatientDossiers();
+  if(tab==="cotisations") await loadPatientCotisations();
+};
+
+async function loadPatientDossiers(){
+  if(!currentPatientDetail?.alafiaId){
+    $("pdm-dossiers").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Aucun dossier</div></div>';
+    return;
+  }
+  showOv("Chargement dossiers...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("patientId","==",currentPatientDetail.alafiaId)));
+  hideOv();
+  const dos=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  dos.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  if(dos.length===0){
+    $("pdm-dossiers").innerHTML='<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Aucun dossier médical</div></div>';
+    return;
+  }
+  const totalFact=dos.reduce((s,d)=>s+(d.montant||0),0);
+  const totalRemb=dos.filter(d=>d.remboursement).reduce((s,d)=>s+(d.remboursement||0),0);
+  $("pdm-dossiers").innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--green-light);border-radius:var(--radius-sm);margin-bottom:12px">
+      <div><div style="font-size:11px;color:var(--text-soft)">Total facturé</div><div style="font-weight:700">${fmt(totalFact)} FCFA</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:var(--text-soft)">Total remboursé</div><div style="font-weight:700;color:var(--green)">+${fmt(totalRemb)} FCFA</div></div>
+    </div>
+    ${dos.map(d=>`
+      <div style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:700">🏥 ${d.hopital||"—"}</div>
+          <span class="chip chip-${d.statut==="validé"?"ok":d.statut==="rejeté"?"ko":"pending"}">${d.statut}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px">📅 ${fdate(d.createdAt)}</div>
+        <div style="font-size:12px;color:var(--text-mid);margin-bottom:8px">${(d.actes||[]).join(" · ")}</div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span>Total : <strong>${fmt(d.montant)} FCFA</strong></span>
+          ${d.remboursement!=null?`<span style="color:var(--green)">Remboursé : <strong>+${fmt(d.remboursement)} FCFA</strong></span>`:""}
+        </div>
+      </div>`).join("")}`;
+}
+
+async function loadPatientCotisations(){
+  if(!currentPatientDetail?.alafiaId){
+    $("pdm-cotisations").innerHTML='<div class="empty"><div class="empty-icon">💳</div><div style="font-size:14px">Aucune cotisation</div></div>';
+    return;
+  }
+  showOv("Chargement cotisations...");
+  const snap=await getDocs(query(collection(db,"cotisations"),where("patientId","==",currentPatientDetail.alafiaId)));
+  hideOv();
+  const cots=snap.docs.map(d=>({...d.data(),_id:d.id}));
+  cots.sort((a,b)=>(b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0))-(a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0)));
+  const totalRecu=cots.reduce((s,c)=>s+(c.montant||0),0);
+  if(cots.length===0){
+    $("pdm-cotisations").innerHTML='<div class="empty"><div class="empty-icon">💳</div><div style="font-size:14px">Aucune cotisation reçue</div></div>';
+    return;
+  }
+  $("pdm-cotisations").innerHTML=`
+    <div style="padding:10px 14px;background:var(--orange-light);border-radius:var(--radius-sm);margin-bottom:12px;display:flex;justify-content:space-between">
+      <span style="font-size:13px;color:var(--orange-dark)">Total reçu</span>
+      <strong style="color:var(--orange-dark)">${fmt(totalRecu)} FCFA</strong>
+    </div>
+    ${cots.map(c=>`
+      <div style="border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--green)">+${fmt(c.montant)} FCFA</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">📅 ${fdate(c.createdAt)}</div>
+        </div>
+        <span class="chip chip-ok">✓ Reçu</span>
+      </div>`).join("")}`;
 }
 
 // ══════════════════════════════════════════
