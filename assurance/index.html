@@ -927,7 +927,9 @@ window.resetForfaitForm=()=>{
   $("ff-nom").value="";
   $("ff-taux").value="";
   $("ff-plafond").value="";
-  $("ff-type").value="AMO";
+  // Remet le premier type disponible par défaut
+  const sel=$("ff-type");
+  if(sel.options.length>0) sel.selectedIndex=0;
   $("ff-desc").value="";
   $("ff-err").style.display="none";
   $("forfait-form-title").textContent="➕ Nouveau forfait";
