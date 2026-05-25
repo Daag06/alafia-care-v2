@@ -251,8 +251,9 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     <button class="tab" id="tab-stats" onclick="switchTab('stats')">📊 Statistiques</button>
   </div>
 
-  <!-- ── ONGLET RECHERCHER PATIENT ── -->
-  <div id="pane-recherche" style="flex:1;overflow-y:auto">
+ <!-- ── ONGLET RECHERCHER PATIENT ── -->
+<div id="pane-recherche" style="overflow-y:auto;padding:1.5rem;margin-top:1rem">
+    <div style="max-width:800px;margin:0 auto;width:100%;padding:0 1.5rem">
 
       <!-- Zone recherche -->
       <div id="search-zone">
@@ -298,21 +299,21 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
     </div>
   </div>
 
-  <!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
-  <div id="pane-dossiers" style="display:none;flex:1;overflow-y:auto">
-    <div class="content-wide">
-      <div id="dossiers-list"></div>
-    </div>
+ <!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
+<div id="pane-dossiers" style="display:none;overflow-y:auto;padding:1.5rem;margin-top:1rem">
+  <div style="max-width:800px;margin:0 auto;width:100%;padding:0 1.5rem">
+    <div id="dossiers-list"></div>
   </div>
+</div>
  
 
   <!-- ── ONGLET STATS ── -->
-  <div id="pane-stats" style="display:none;flex:1;overflow-y:auto">
-    <div class="content-wide">
-      <div class="stats-grid" id="stats-grid"></div>
-      <div id="stats-detail"></div>
-    </div>
+<div id="pane-stats" style="display:none;overflow-y:auto;padding:1.5rem;margin-top:1rem">
+  <div style="max-width:800px;margin:0 auto;width:100%;padding:0 1.5rem">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div id="stats-detail"></div>
   </div>
+</div>
 
 </div>
 
@@ -1010,8 +1011,136 @@ function displayEpisodeContent(patient,episode){
 }
 
 window.addActeToEpisode=async(patientId, episodeId)=>{
-  // À implémenter dans la prochaine étape
-  showToast("Feature en développement...","#1A56DB");
+  showOv("Chargement...");
+  const patientRef=doc(db,"patients",patientId);
+  const patientSnap=await getDoc(patientRef);
+  hideOv();
+  
+  if(!patientSnap.exists()){
+    showToast("❌ Patient non trouvé","#D63031");
+    return;
+  }
+  
+  const patient={...patientSnap.data(),_id:patientSnap.id};
+  const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
+  
+  if(episodeIdx===-1){
+    showToast("❌ Épisode non trouvé","#D63031");
+    return;
+  }
+  
+  const episode=patient.episodes[episodeIdx];
+  
+  // Affiche le modal pour ajouter un acte
+  const m=document.createElement("div");
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+  m.innerHTML=`
+    <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem;max-height:90vh;overflow-y:auto">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">➕ Ajouter un acte</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Patient : <strong>${patient.prenom} ${patient.nom}</strong></div>
+      
+      <label class="lbl">Type d'acte *</label>
+      <select id="new-acte-type" class="inp" style="cursor:pointer">
+        <option value="">-- Sélectionner --</option>
+        ${ACTES.map(a=>`<option value="${a}">${a}</option>`).join("")}
+      </select>
+      
+      <label class="lbl">Motif *</label>
+      <input id="new-acte-motif" class="inp" type="text" placeholder="Ex: Suivi consultation"/>
+      
+      <label class="lbl">Détails (optionnel)</label>
+      <textarea id="new-acte-details" class="inp" placeholder="Ex: Examen de contrôle..." style="height:80px;resize:vertical"></textarea>
+      
+      <label class="lbl">Montant (FCFA) *</label>
+      <input id="new-acte-montant" class="inp" type="number" placeholder="Ex: 15000"/>
+      
+      <div id="add-acte-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      
+      <div style="display:flex;gap:10px">
+        <button id="add-acte-cancel" class="btn btn-secondary" style="flex:1">Annuler</button>
+        <button id="add-acte-confirm" class="btn btn-green" style="flex:2">✅ Ajouter</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(m);
+  
+  const errDiv=m.querySelector("#add-acte-err");
+  const confirmBtn=m.querySelector("#add-acte-confirm");
+  const cancelBtn=m.querySelector("#add-acte-cancel");
+  
+  confirmBtn.onclick=async()=>{
+    const type=$("new-acte-type").value.trim();
+    const motif=$("new-acte-motif").value.trim();
+    const details=$("new-acte-details").value.trim();
+    const montant=parseInt($("new-acte-montant").value);
+    
+    errDiv.style.display="none";
+    
+    if(!type){
+      errDiv.textContent="Sélectionnez un type d'acte.";
+      errDiv.style.display="block";
+      return;
+    }
+    if(!motif){
+      errDiv.textContent="Le motif est obligatoire.";
+      errDiv.style.display="block";
+      return;
+    }
+    if(!montant||montant<=0){
+      errDiv.textContent="Entrez un montant valide.";
+      errDiv.style.display="block";
+      return;
+    }
+    
+    showOv("Ajout de l'acte...");
+    
+    try{
+      // Calcule le remboursement
+      const remb=patient.assuranceValide?Math.round(montant*patient.assuranceTaux/100):0;
+      
+      // Crée le nouvel acte
+      const acteObj={
+        id:"acte_"+Date.now(),
+        type:type,
+        motif:motif,
+        details:details,
+        montant:montant,
+        remboursement:remb,
+        date:new Date(),
+        heure:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})
+      };
+      
+      // Ajoute l'acte à l'épisode
+      episode.actes.push(acteObj);
+      episode.totalMontant+=montant;
+      episode.totalRemboursement+=remb;
+      
+      // Met à jour le patient
+      await updateDoc(patientRef,{
+        episodes:patient.episodes,
+        updatedAt:new Date()
+      });
+      
+      hideOv();
+      document.body.removeChild(m);
+      
+      showToast("✅ Acte ajouté !","#0A7C5C");
+      
+      // Rafraîchit l'affichage
+      displayEpisodeDetail(patient,episode);
+      
+    }catch(e){
+      hideOv();
+      errDiv.textContent="Erreur lors de l'ajout. Réessayez.";
+      errDiv.style.display="block";
+      console.error(e);
+    }
+  };
+  
+  cancelBtn.onclick=()=>{
+    document.body.removeChild(m);
+  };
 };
 
 // ══════════════════════════════════════════
