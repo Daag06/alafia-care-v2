@@ -570,7 +570,7 @@ window.doLogin=async()=>{
 };
 
 // Listener temps réel sur les notifications du patient
-onSnapshot(doc(db,"patients",p._id),snap=>{
+      onSnapshot(doc(db,"patients",p._id),snap=>{
         if(snap.exists()){
           currentUser={...snap.data(),_id:snap.id};
           const newNotifs=currentUser.notifications||[];
@@ -923,7 +923,50 @@ window.validatePaymentNotification=async(notificationId, episodeId, montant)=>{
     
     hideOv();
     showToast("✅ Paiement MoMo validé !","#0A7C5C");
+    // Trouve le patient qui a cet épisode et met à jour le paiement
+    const allPatients=await getDocs(collection(db,"patients"));
+    let patientWithEpisode=null;
     
+    for(const patSnap of allPatients.docs){
+      const patData=patSnap.data();
+      if(patData.episodes&&patData.episodes.some(ep=>ep.id===episodeId)){
+        patientWithEpisode={...patData,_id:patSnap.id};
+        break;
+      }
+    }
+
+    if(patientWithEpisode){
+      const epIdx=patientWithEpisode.episodes.findIndex(ep=>ep.id===episodeId);
+      const episode=patientWithEpisode.episodes[epIdx];
+      
+      // Trouve le paiement MoMo en attente et change son statut
+      const paiementIdx=episode.paiements.findIndex(p=>p.type==="momo"&&p.statut==="en attente"&&p.montant===montant);
+      if(paiementIdx!==-1){
+        episode.paiements[paiementIdx].statut="confirmé";
+        episode.paiements[paiementIdx].dateConfirmation=new Date();
+        
+        // Recalcule le total payé
+        const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+        episode.totalPayéPatient=totalPayé;
+        
+        // Si entièrement payé, marquer comme complété
+        if(totalPayé>=episode.totalMontant){
+          episode.statut="complété";
+        }
+      }
+      
+      // Met à jour dans Firestore
+      await updateDoc(doc(db,"patients",patientWithEpisode._id),{
+        episodes:patientWithEpisode.episodes
+      });
+    }
+
+    // Met à jour aussi les notifications du patient
+    await updateDoc(doc(db,"patients",currentUser._id),{
+      notifications:currentUser.notifications,
+      updatedAt:new Date()
+    });
+        
     // Rafraîchit l'affichage des notifications
     renderNotifications();
     
