@@ -437,14 +437,12 @@ function initDash(){
   $("dash-hopital-nom").textContent=currentHopital.nom;
   $("dash-hopital-ville").textContent=currentHopital.ville||"";
   switchTab("recherche");
-  // renderActes(); // ❌ On enlève ça, pas besoin pour recherche
   // Listener temps réel
   if(unsubDossiers)unsubDossiers();
   unsubDossiers=onSnapshot(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)),snap=>{
     allDossiers=snap.docs.map(d=>({...d.data(),_id:d.id}));
     const updated=snap.docChanges().filter(c=>c.type==="modified"&&(c.doc.data().statut==="validé"||c.doc.data().statut==="rejeté"));
     if(updated.length>0){
-      $("hist-badge").style.display="inline-flex";
       showToast("🔔 Un dossier a été mis à jour par l'assurance","#1A56DB");
     }
   });
@@ -475,13 +473,11 @@ window.hSearch=async()=>{
   const p=all.find(x=>x.alafiaId&&(x.alafiaId===q.toUpperCase()||x.tel===q));
   
   if(!p){
-    // ❌ Patient pas trouvé
     $("h-err").textContent="Patient introuvable dans le système. L'assurance doit l'ajouter d'abord.";
     $("h-err").style.display="block";
     return;
   }
   
-  // ✅ Patient trouvé
   showOv("Vérification du dossier...");
   
   // Cherche si le patient a déjà un dossier avec un épisode en cours à cet hôpital
@@ -489,57 +485,40 @@ window.hSearch=async()=>{
   
   hideOv();
   
+  hPt=p;
+  
   if(hasEpisodeHere){
-    // ✅ Patient a un dossier ici → Redirection auto
-    showToast("Patient trouvé ! Redirection...","#0A7C5C");
-    hPt=p;
-    openPatientDossier(p);
+    // ✅ Patient a un dossier ici → Affiche ses épisodes
+    showToast("Patient trouvé ! Affichage du dossier...","#0A7C5C");
+    showExistingDossierInfo(p);
   }else{
     // ❌ Patient trouvé mais PAS de dossier ici → Affiche bouton créer
-    hPt=p;
     showCreateDossierButton(p);
   }
 };
 
-
-// ── CONSENTEMENT ──
-function showConsentModal(p){
-  return new Promise(resolve=>{
-    const m=document.createElement("div");
-    m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
-    m.innerHTML=`
-      <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
-        <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔐 Consentement d'accès</div>
-        <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">
-          <strong>${currentHopital.nom}</strong> demande l'accès au dossier médical de :
-        </div>
-        <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:16px;text-align:center;border:1.5px solid #9FE1CB">
-          <div style="font-size:18px;font-weight:800;color:var(--green)">${p.prenom} ${p.nom}</div>
-          <div style="font-size:12px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId}</div>
-        </div>
-        <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px;line-height:1.6">
-          En confirmant, vous autorisez le personnel soignant à consulter vos informations médicales pour cette consultation.
-        </div>
-        <div style="display:flex;gap:10px">
-          <button id="c-no" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">✕ Refuser</button>
-          <button id="c-yes" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--green),#1D9E75);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✓ Autoriser l'accès</button>
-        </div>
-      </div>`;
-    document.body.appendChild(m);
-    m.querySelector("#c-yes").onclick=()=>{document.body.removeChild(m);resolve(true);};
-    m.querySelector("#c-no").onclick=()=>{document.body.removeChild(m);resolve(false);};
-  });
+// ── AFFICHER DOSSIER EXISTANT ──
+function showExistingDossierInfo(p){
+  const episodes=p.episodes.filter(ep=>ep.hopitalId===currentHopital._id);
+  
+  $("search-zone").style.display="none";
+  $("form-zone").style.display="block";
+  $("form-zone").innerHTML=`
+    <button class="back-btn" onclick="hReset()">← Nouvelle recherche</button>
+    <div class="card">
+      <div class="card-title">✓ Patient trouvé</div>
+      <div class="patient-found patient-found-std" style="margin-bottom:1rem">
+        <div class="patient-name">${p.prenom} ${p.nom}</div>
+        <div class="patient-info">ID : ${p.alafiaId} • ${p.tel}</div>
+      </div>
+      <div id="episodes-info" class="alert alert-info">
+        ℹ️ Ce patient a ${episodes.length} épisode(s) à ${currentHopital.nom}
+      </div>
+      <button class="btn btn-green" onclick="switchTab('dossiers')" style="width:100%;margin-top:1rem">📂 Voir ses dossiers</button>
+      <button class="btn btn-secondary" onclick="createNewDossier()" style="width:100%;margin-top:0.5rem">➕ Créer nouvel épisode</button>
+    </div>
+  `;
 }
-
-window.hReset=()=>{
-  hPt=null;hAct=[];
-  $("h-pid").value="";
-  $("h-err").style.display="none";
-  $("search-zone").style.display="block";
-  $("form-zone").style.display="none";
-  const createBtn=$("create-dossier-btn");
-  if(createBtn) createBtn.style.display="none";
-};
 
 // ══════════════════════════════════════════
 // ── AFFICHER BOUTON CRÉER DOSSIER
@@ -680,12 +659,14 @@ window.submitNewDossier=async()=>{
     });
     
     hideOv();
-    showToast("✅ Dossier créé ! Redirection...","#0A7C5C");
+    showToast("✅ Dossier créé ! Choix du paiement...","#0A7C5C");
     
-    // Recharge le patient et ouvre son dossier
+    // Recharge le patient
     const updated=await getDoc(patientRef);
     hPt={...updated.data(),_id:updated.id};
-    openPatientDossier(hPt);
+    
+    // Affiche le modal de choix du mode de paiement
+    showPaymentModeChoice(hPt._id, episode.id, montant);
     
   }catch(e){
     hideOv();
@@ -696,18 +677,9 @@ window.submitNewDossier=async()=>{
 };
 
 // ══════════════════════════════════════════
-// ── OUVRIR DOSSIER PATIENT
-// ══════════════════════════════════════════
-function openPatientDossier(p){
-  // Pour maintenant, juste afficher le dossier dans "Dossiers médicaux"
-  switchTab("dossiers");
-  // On va améliorer ça dans la prochaine étape
-};
-
-// ══════════════════════════════════════════
 // ── ONGLET DOSSIERS MÉDICAUX (HÔPITAL)
 // ══════════════════════════════════════════
-async function renderDossiersHopital(){
+window.renderDossiersHopital=async function(){
   showOv("Chargement dossiers médicaux...");
   const pts=await getDocs(collection(db,"patients"));
   hideOv();
@@ -730,6 +702,33 @@ async function renderDossiersHopital(){
   }
   
   // Affiche la liste des patients
+  $("dossiers-list").innerHTML=`
+    <div style="margin-bottom:1rem">
+      <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..." 
+        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:12px"
+        oninput="filterPatients()"/>
+    </div>
+    <div id="patients-list-container"></div>
+  `;
+  
+  displayPatientsList(patients);
+};
+
+window.reloadPatientsList=async function(){
+  showOv("Chargement...");
+  const pts=await getDocs(collection(db,"patients"));
+  hideOv();
+  
+  let patients=pts.docs
+    .map(d=>({...d.data(),_id:d.id}))
+    .filter(p=>p.episodes&&p.episodes.some(ep=>ep.hopitalId===currentHopital._id));
+  
+  patients.sort((a,b)=>{
+    const lastEpA=a.episodes[a.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    const lastEpB=b.episodes[b.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    return lastEpB-lastEpA;
+  });
+  
   $("dossiers-list").innerHTML=`
     <div style="margin-bottom:1rem">
       <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..." 
@@ -781,7 +780,6 @@ function displayPatientsList(patients){
 }
 
 window.filterPatients=async()=>{
-  // Recharge pour filtrer
   showOv("Filtrage...");
   const pts=await getDocs(collection(db,"patients"));
   hideOv();
@@ -813,13 +811,12 @@ window.openPatientEpisodes=async(patientId)=>{
   const patient={...patientSnap.data(),_id:patientSnap.id};
   const episodes=patient.episodes.filter(ep=>ep.hopitalId===currentHopital._id);
   
-  // Affiche le détail du patient + ses épisodes
   displayPatientEpisodes(patient,episodes);
 };
 
 function displayPatientEpisodes(patient,episodes){
   $("dossiers-list").innerHTML=`
-    <button class="back-btn" onclick="renderDossiersHopital()">← Retour à la liste</button>
+    <button class="back-btn" onclick="reloadPatientsList()">← Retour à la liste</button>
     
     <div class="card">
       <div style="margin-bottom:1rem">
@@ -893,6 +890,57 @@ window.openEpisodeDetail=async(patientId, episodeId)=>{
   
   displayEpisodeDetail(patient,episode);
 };
+
+// ══════════════════════════════════════════
+// ── AFFICHER DÉTAIL ÉPISODE DANS FORM-ZONE
+// ══════════════════════════════════════════
+function displayEpisodeDetailInFormZone(patient,episode){
+  const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+  const reste=episode.totalMontant-totalPayé;
+  
+  $("form-zone").innerHTML=`
+    <button class="back-btn" onclick="hReset()">← Nouvelle recherche</button>
+    
+    <div class="card">
+      <div style="margin-bottom:1rem">
+        <div style="font-size:14px;color:var(--text-soft);margin-bottom:4px">Patient</div>
+        <div class="patient-name">${patient.prenom} ${patient.nom}</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">${patient.alafiaId}</div>
+      </div>
+      
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
+        <div style="font-size:13px;color:var(--text-soft);margin-bottom:6px;font-weight:600">🏥 Épisode</div>
+        <div style="font-size:14px;font-weight:600">${new Date(episode.dateDebut.toDate?.()??episode.dateDebut).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})} - ${episode.hopitalNom}</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">Statut :<span class="chip ${episode.statut==="en cours" ? "chip-pending" : "chip-ok"}" style="display:inline-flex;margin-left:6px">${episode.statut}</span></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">🩺 Historique médical</div>
+      <div id="actes-detail"></div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">💳 Historique paiements</div>
+      <div id="paiements-detail"></div>
+    </div>
+    
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">📊 Résumé financier</div>
+      <div id="resume-detail"></div>
+    </div>
+    
+    ${episode.statut==="en cours"?`
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="hReset()" style="flex:1">Nouvelle recherche</button>
+        <button class="btn btn-green" onclick="addActeToEpisode('${patient._id}', '${episode.id}')" style="flex:1">➕ Ajouter acte</button>
+      </div>
+    `:""}
+  `;
+  
+  // Affiche les détails
+  displayEpisodeContent(patient,episode);
+}
 
 function displayEpisodeDetail(patient,episode){
   const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
@@ -1001,11 +1049,22 @@ function displayEpisodeContent(patient,episode){
       </div>
       ${reste>0?`
         <div style="margin-top:10px;padding:10px;background:var(--gold-light);border-radius:6px;border-left:3px solid var(--gold)">
-          <div style="font-size:12px;color:#7A4500">
+          <div style="font-size:12px;color:#7A4500;margin-bottom:8px">
             <strong>Reste à charge : ${fmt(reste)} FCFA</strong>
           </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary btn-sm" onclick="addCashPayment('${patient._id}', '${episode.id}', ${reste})" style="flex:1;padding:8px 12px;font-size:12px">💵 Cash</button>
+            <button class="btn btn-primary btn-sm" onclick="addMoMoPayment('${patient._id}', '${episode.id}', ${reste})" style="flex:1;padding:8px 12px;font-size:12px">📱 MoMo</button>
+          </div>
         </div>
-      `:""}
+      `:`
+        <div style="margin-top:10px;padding:10px;background:var(--green-light);border-radius:6px;border-left:3px solid var(--green)">
+          <div style="font-size:12px;color:var(--green);margin-bottom:8px">
+            <strong>✅ Entièrement payé</strong>
+          </div>
+          <button class="btn btn-green btn-sm" onclick="closeEpisode('${patient._id}', '${episode.id}')" style="width:100%;padding:8px 12px;font-size:12px">🔒 Clôturer épisode</button>
+        </div>
+      `}
     </div>
   `;
 }
@@ -1144,14 +1203,42 @@ window.addActeToEpisode=async(patientId, episodeId)=>{
 };
 
 // ══════════════════════════════════════════
-// ── CONFIRMER PAIEMENT CASH
+// ── AFFICHER CHOIX MODE DE PAIEMENT
 // ══════════════════════════════════════════
-window.confirmerCashModal=async(dossierId, montant)=>{
+window.showPaymentModeChoice=(patientId, episodeId, montant)=>{
+  $("form-zone").innerHTML=`
+    <div class="card">
+      <div class="card-title">💳 Mode de paiement</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:1.5rem;line-height:1.6">
+        Le dossier a été créé. Le patient doit maintenant valider le paiement du reste à charge.
+      </div>
+      
+      <div style="background:var(--gold-light);border-radius:12px;padding:14px;margin-bottom:1.5rem;border:1.5px solid var(--gold);text-align:center">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Montant à payer</div>
+        <div style="font-size:28px;font-weight:800;color:var(--gold)">${fmt(montant)} FCFA</div>
+      </div>
+      
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn" onclick="addCashPayment('${patientId}', '${episodeId}', ${montant})" style="background:linear-gradient(135deg,#F5A623,#F59E0B);color:white;font-size:16px;padding:14px">
+          💵 Paiement en CASH
+        </button>
+        <button class="btn" onclick="addMoMoPayment('${patientId}', '${episodeId}', ${montant})" style="background:linear-gradient(135deg,#FFCC00,#FFD740);color:#4A3000;font-size:16px;padding:14px">
+          📱 Paiement par MOMO
+        </button>
+      </div>
+    </div>
+  `;
+};
+
+// ══════════════════════════════════════════
+// ── AJOUTER PAIEMENT CASH
+// ══════════════════════════════════════════
+window.addCashPayment=async(patientId, episodeId, montant)=>{
   const m=document.createElement("div");
   m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
   m.innerHTML=`
     <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px">💰 Confirmer paiement cash</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">💵 Confirmer paiement cash</div>
       <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Enregistrez le paiement en espèces reçu du patient</div>
       
       <div style="background:var(--gold-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--gold);text-align:center">
@@ -1161,23 +1248,23 @@ window.confirmerCashModal=async(dossierId, montant)=>{
       
       <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:16px;cursor:pointer">
         <input type="checkbox" id="confirm-cash-cb" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold)"/>
-        <span style="font-size:13px;color:var(--text-mid)">Je confirme avoir reçu <strong>${fmt(montant)} FCFA</strong> en espèces du patient</span>
+        <span style="font-size:13px;color:var(--text-mid)">Je confirme avoir reçu <strong>${fmt(montant)} FCFA</strong> en espèces</span>
       </label>
       
-      <div id="confirm-cash-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      <div id="cash-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
       
       <div style="display:flex;gap:10px">
-        <button id="c-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
-        <button id="c-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--gold),#F59E0B);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✅ Confirmer</button>
+        <button id="cash-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
+        <button id="cash-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--gold),#F59E0B);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✅ Confirmer</button>
       </div>
     </div>`;
   
   document.body.appendChild(m);
   
-  const confirmBtn=m.querySelector("#c-confirm");
-  const cancelBtn=m.querySelector("#c-cancel");
+  const confirmBtn=m.querySelector("#cash-confirm");
+  const cancelBtn=m.querySelector("#cash-cancel");
   const checkbox=m.querySelector("#confirm-cash-cb");
-  const errDiv=m.querySelector("#confirm-cash-err");
+  const errDiv=m.querySelector("#cash-err");
   
   confirmBtn.onclick=async()=>{
     if(!checkbox.checked){
@@ -1186,43 +1273,62 @@ window.confirmerCashModal=async(dossierId, montant)=>{
       return;
     }
     
-    confirmBtn.disabled=true;
-    confirmBtn.textContent="Enregistrement...";
+    showOv("Enregistrement du paiement...");
     
     try{
-      showOv("Enregistrement du paiement...");
+      const patientRef=doc(db,"patients",patientId);
+      const patientSnap=await getDoc(patientRef);
+      const patient={...patientSnap.data(),_id:patientSnap.id};
+      const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
+      const episode=patient.episodes[episodeIdx];
       
-      // Récupère le dossier
-      const docRef=doc(db,"dossiers",dossierId);
-      const docSnap=await getDoc(docRef);
-      const dosData=docSnap.data();
-      
-      // Ajoute le paiement cash au tableau
-      const paiements=dosData.paiements||[];
-      paiements.push({
+      // Ajoute le paiement cash
+      const paiement={
         type:"cash",
         montant:montant,
         date:new Date(),
-        agentNom:currentHopital.nom,
+        heure:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
         statut:"confirmé"
-      });
+      };
       
-      // Met à jour le dossier
-      await updateDoc(docRef,{
-        paiements:paiements,
+      episode.paiements.push(paiement);
+      const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+      episode.totalPayéPatient=totalPayé;
+      
+      // Si entièrement payé, marquer comme complété
+      if(totalPayé>=episode.totalMontant){
+        episode.statut="complété";
+      }
+      
+      // Crée une notification pour le patient
+      const notification={
+        id:"notif_"+Date.now(),
+        type:"paiement_momo",
+        episodeId:episodeId,
+        montant:montant,
+        statut:"en attente",
+        dateCreation:new Date(),
+        message:`Veuillez valider le paiement MoMo de ${fmt(montant)} FCFA`
+      };
+      
+      patient.notifications=patient.notifications||[];
+      patient.notifications.push(notification);
+      
+      await updateDoc(patientRef,{
+        episodes:patient.episodes,
+        notifications:patient.notifications,
         updatedAt:new Date()
       });
       
       hideOv();
       document.body.removeChild(m);
-      
       showToast("✅ Paiement cash enregistré !","#0A7C5C");
-      renderDossiersHopital();
+      
+      // Rafraîchit l'affichage dans form-zone
+      displayEpisodeDetailInFormZone(patient,episode);
       
     }catch(e){
       hideOv();
-      confirmBtn.disabled=false;
-      confirmBtn.textContent="✅ Confirmer";
       errDiv.textContent="Erreur lors de l'enregistrement. Réessayez.";
       errDiv.style.display="block";
       console.error(e);
@@ -1234,36 +1340,182 @@ window.confirmerCashModal=async(dossierId, montant)=>{
   };
 };
 
-// ── STATS ──
-async function renderStats(){
-  showOv("Calcul...");
-  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
-  hideOv();
-  const dos=snap.docs.map(d=>d.data());
-  const total=dos.length;
-  const valides=dos.filter(d=>d.statut==="validé").length;
-  const attente=dos.filter(d=>d.statut==="en attente").length;
-  const rejetes=dos.filter(d=>d.statut==="rejeté").length;
-  const totalMontant=dos.reduce((s,d)=>s+(d.montant||0),0);
-  const totalRemb=dos.filter(d=>d.remboursement).reduce((s,d)=>s+(d.remboursement||0),0);
-  $("stats-grid").innerHTML=`
-    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total dossiers</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${valides}</div><div class="stat-label">Validés</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${attente}</div><div class="stat-label">En attente</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${rejetes}</div><div class="stat-label">Rejetés</div></div>`;
-  $("stats-detail").innerHTML=`
-    <div class="card">
-      <div class="card-title">💰 Finances</div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--text-soft);font-size:14px">Total facturé</span>
-        <strong style="font-size:15px">${fmt(totalMontant)} FCFA</strong>
+// ══════════════════════════════════════════
+// ── AJOUTER PAIEMENT MOMO
+// ══════════════════════════════════════════
+window.addMoMoPayment=async(patientId, episodeId, montant)=>{
+  const m=document.createElement("div");
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+  m.innerHTML=`
+    <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">📱 Paiement MoMo</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Le patient a-t-il payé ${fmt(montant)} FCFA par MoMo ?</div>
+      
+      <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--blue);text-align:center">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Montant à confirmer</div>
+        <div style="font-size:28px;font-weight:800;color:var(--blue)">${fmt(montant)} FCFA</div>
       </div>
-      <div style="display:flex;justify-content:space-between;padding:10px 0">
-        <span style="color:var(--text-soft);font-size:14px">Total remboursé par assurances</span>
-        <strong style="font-size:15px;color:var(--green)">+${fmt(totalRemb)} FCFA</strong>
+      
+      <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:10px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="confirm-momo-cb" style="width:18px;height:18px;cursor:pointer;accent-color:var(--blue)"/>
+        <span style="font-size:13px;color:var(--text-mid)">Je confirme le paiement MoMo de <strong>${fmt(montant)} FCFA</strong></span>
+      </label>
+      
+      <div id="momo-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      
+      <div style="display:flex;gap:10px">
+        <button id="momo-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
+        <button id="momo-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--blue),#2563EB);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✅ Confirmer</button>
       </div>
     </div>`;
-}
+  
+  document.body.appendChild(m);
+  
+  const confirmBtn=m.querySelector("#momo-confirm");
+  const cancelBtn=m.querySelector("#momo-cancel");
+  const checkbox=m.querySelector("#confirm-momo-cb");
+  const errDiv=m.querySelector("#momo-err");
+  
+  confirmBtn.onclick=async()=>{
+    if(!checkbox.checked){
+      errDiv.textContent="Cochez la case pour confirmer.";
+      errDiv.style.display="block";
+      return;
+    }
+    
+    showOv("Enregistrement du paiement...");
+    
+    try{
+      const patientRef=doc(db,"patients",patientId);
+      const patientSnap=await getDoc(patientRef);
+      const patient={...patientSnap.data(),_id:patientSnap.id};
+      const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
+      const episode=patient.episodes[episodeIdx];
+      
+      // Ajoute le paiement MoMo
+      const paiement={
+        type:"momo",
+        montant:montant,
+        date:new Date(),
+        heure:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+        statut:"en attente"
+      };
+      
+      episode.paiements.push(paiement);
+      const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
+      episode.totalPayéPatient=totalPayé;
+      
+      // Si entièrement payé, marquer comme complété
+      if(totalPayé>=episode.totalMontant){
+        episode.statut="complété";
+      }
+      
+      await updateDoc(patientRef,{
+        episodes:patient.episodes,
+        updatedAt:new Date()
+      });
+      
+      hideOv();
+      document.body.removeChild(m);
+      showToast("📱 Notification MoMo envoyée au patient","#1A56DB");
+      
+      // Rafraîchit l'affichage dans form-zone
+      displayEpisodeDetailInFormZone(patient,episode);
+      
+    }catch(e){
+      hideOv();
+      errDiv.textContent="Erreur lors de l'enregistrement. Réessayez.";
+      errDiv.style.display="block";
+      console.error(e);
+    }
+  };
+  
+  cancelBtn.onclick=()=>{
+    document.body.removeChild(m);
+  };
+};
+
+// ══════════════════════════════════════════
+// ── CLÔTURER ÉPISODE
+// ══════════════════════════════════════════
+window.closeEpisode=async(patientId, episodeId)=>{
+  const m=document.createElement("div");
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+  m.innerHTML=`
+    <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔒 Clôturer l'épisode</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Confirmez la clôture de cet épisode médical</div>
+      
+      <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--green)">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Statut</div>
+        <div style="font-size:16px;font-weight:800;color:var(--green)">✅ COMPLÉTÉ</div>
+      </div>
+      
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px;line-height:1.6">
+        Cet épisode sera marqué comme complété et ne pourra plus être modifié.
+      </div>
+      
+      <div id="close-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      
+      <div style="display:flex;gap:10px">
+        <button id="close-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
+        <button id="close-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--green),#059669);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">🔒 Clôturer</button>
+      </div>
+    </div>`;
+  
+  document.body.appendChild(m);
+  
+  const confirmBtn=m.querySelector("#close-confirm");
+  const cancelBtn=m.querySelector("#close-cancel");
+  const errDiv=m.querySelector("#close-err");
+  
+  confirmBtn.onclick=async()=>{
+    showOv("Clôture en cours...");
+    
+    try{
+      const patientRef=doc(db,"patients",patientId);
+      const patientSnap=await getDoc(patientRef);
+      const patient={...patientSnap.data(),_id:patientSnap.id};
+      const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
+      const episode=patient.episodes[episodeIdx];
+      
+      // Marquer comme complété
+      episode.statut="complété";
+      episode.dateFin=new Date();
+      
+      await updateDoc(patientRef,{
+        episodes:patient.episodes,
+        updatedAt:new Date()
+      });
+      
+      hideOv();
+      document.body.removeChild(m);
+      showToast("✅ Épisode clôturé !","#0A7C5C");
+      
+      // Retour à la liste des patients
+      reloadPatientsList();
+      
+    }catch(e){
+      hideOv();
+      errDiv.textContent="Erreur lors de la clôture. Réessayez.";
+      errDiv.style.display="block";
+      console.error(e);
+    }
+  };
+  
+  cancelBtn.onclick=()=>{
+    document.body.removeChild(m);
+  };
+};
+
+// ── RESET RECHERCHE ──
+window.hReset=()=>{
+  hPt=null;hAct=[];
+  $("h-pid").value="";
+  $("h-err").style.display="none";
+  $("search-zone").style.display="block";
+  $("form-zone").style.display="none";
+};
 
 // ── SCANNER QR ──
 window.startScanner=async()=>{
@@ -1303,6 +1555,37 @@ window.stopScanner=()=>{
   if(scanFrame)cancelAnimationFrame(scanFrame);
   if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
 };
+
+// ── STATS ──
+async function renderStats(){
+  showOv("Calcul...");
+  const snap=await getDocs(query(collection(db,"dossiers"),where("hopitalId","==",currentHopital._id)));
+  hideOv();
+  const dos=snap.docs.map(d=>d.data());
+  const total=dos.length;
+  const valides=dos.filter(d=>d.statut==="validé").length;
+  const attente=dos.filter(d=>d.statut==="en attente").length;
+  const rejetes=dos.filter(d=>d.statut==="rejeté").length;
+  const totalMontant=dos.reduce((s,d)=>s+(d.montant||0),0);
+  const totalRemb=dos.filter(d=>d.remboursement).reduce((s,d)=>s+(d.remboursement||0),0);
+  $("stats-grid").innerHTML=`
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total dossiers</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${valides}</div><div class="stat-label">Validés</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${attente}</div><div class="stat-label">En attente</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">${rejetes}</div><div class="stat-label">Rejetés</div></div>`;
+  $("stats-detail").innerHTML=`
+    <div class="card">
+      <div class="card-title">💰 Finances</div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text-soft);font-size:14px">Total facturé</span>
+        <strong style="font-size:15px">${fmt(totalMontant)} FCFA</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0">
+        <span style="color:var(--text-soft);font-size:14px">Total remboursé par assurances</span>
+        <strong style="font-size:15px;color:var(--green)">+${fmt(totalRemb)} FCFA</strong>
+      </div>
+    </div>`;
+}
 </script>
 </body>
 </html>
