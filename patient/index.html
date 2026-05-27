@@ -569,17 +569,6 @@ window.doLogin=async()=>{
   }
 };
 
-// Listener temps réel sur les notifications du patient
-      onSnapshot(doc(db,"patients",p._id),snap=>{
-        if(snap.exists()){
-          currentUser={...snap.data(),_id:snap.id};
-          const newNotifs=currentUser.notifications||[];
-          if(newNotifs.length>0&&currentUser.notifications){
-            showToast("🔔 Nouvelle notification de paiement !","#1A73E8");
-          }
-        }
-      });
-
 // ── DASHBOARD PRINCIPAL ──
 function renderDash(){
   const u=currentUser;
