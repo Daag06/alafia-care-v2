@@ -165,6 +165,18 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 /* ── BACK BTN ── */
 .back-btn{background:none;border:none;color:var(--text-soft);font-size:13px;font-family:var(--font);cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;margin-bottom:1.5rem;font-weight:600}
 
+/* ── TABLE DOSSIERS ── */
+.dossiers-table{width:100%;border-collapse:collapse;margin-top:1rem;background:white;border:1.5px solid var(--border);border-radius:var(--radius)}
+.dossiers-table thead{background:var(--bg);border-bottom:2px solid var(--border)}
+.dossiers-table th{padding:12px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.5px}
+.dossiers-table tbody tr{border-bottom:1px solid var(--border);transition:background .2s;cursor:pointer}
+.dossiers-table tbody tr:hover{background:var(--bg)}
+.dossiers-table td{padding:14px;font-size:13px;color:var(--text-mid)}
+.dossiers-table .col-id{font-weight:700;color:var(--text);font-family:var(--mono);font-size:14px}
+.dossiers-table .col-dates{color:var(--text-soft);font-size:12px}
+.dossiers-table .col-etat{text-align:center}
+.dossiers-search-box{margin-bottom:1rem}
+
 @media(min-width:600px){
   .stats-grid{grid-template-columns:repeat(4,1fr)}
   .actes-grid{grid-template-columns:repeat(3,1fr)}
