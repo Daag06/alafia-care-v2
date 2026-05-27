@@ -301,7 +301,15 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 
  <!-- ── ONGLET DOSSIERS MÉDICAUX ── -->
 <div id="pane-dossiers" style="display:none;overflow-y:auto;padding:1.5rem;margin-top:1rem">
-  <div style="max-width:800px;margin:0 auto;width:100%;padding:0 1.5rem">
+  <div style="max-width:900px;margin:0 auto;width:100%;padding:0 1.5rem">
+    <!-- Barre de recherche -->
+    <div class="dossiers-search-box">
+      <input type="text" id="search-dossiers-input" placeholder="🔍 Chercher un patient..." 
+        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px"
+        oninput="filterDossiersList()"/>
+    </div>
+    
+    <!-- Tableau des dossiers -->
     <div id="dossiers-list"></div>
   </div>
 </div>
@@ -701,14 +709,18 @@ window.renderDossiersHopital=async function(){
     return;
   }
   
-  // Affiche la liste des patients
+  // Affiche le tableau
   $("dossiers-list").innerHTML=`
-    <div style="margin-bottom:1rem">
-      <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..." 
-        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:12px"
-        oninput="filterPatients()"/>
-    </div>
-    <div id="patients-list-container"></div>
+    <table class="dossiers-table">
+      <thead>
+        <tr>
+          <th>ID Patients</th>
+          <th>Dates</th>
+          <th>États</th>
+        </tr>
+      </thead>
+      <tbody id="dossiers-tbody"></tbody>
+    </table>
   `;
   
   displayPatientsList(patients);
@@ -742,7 +754,7 @@ window.reloadPatientsList=async function(){
 };
 
 function displayPatientsList(patients){
-  const searchInput=$("search-patient-input").value.trim().toLowerCase();
+  const searchInput=$("search-dossiers-input").value.trim().toLowerCase();
   const filtered=patients.filter(p=>{
     const nom=((p.prenom||"")+" "+(p.nom||"")).toLowerCase();
     const id=(p.alafiaId||"").toLowerCase();
@@ -750,34 +762,46 @@ function displayPatientsList(patients){
   });
   
   if(filtered.length===0){
-    $("patients-list-container").innerHTML='<div class="empty"><div class="empty-icon">👤</div><div style="font-size:14px">Aucun patient trouvé</div></div>';
+    $("dossiers-list").innerHTML='<div class="empty"><div class="empty-icon">👤</div><div style="font-size:14px">Aucun patient trouvé</div></div>';
     return;
   }
   
-  $("patients-list-container").innerHTML=filtered.map(p=>{
+  // Remplis le tableau
+  $("dossiers-tbody").innerHTML=filtered.map(p=>{
     // Cherche l'épisode EN COURS pour cet hôpital
     const episodes=p.episodes.filter(ep=>ep.hopitalId===currentHopital._id);
     const episodeEnCours=episodes.find(ep=>ep.statut==="en cours");
-    const reste=episodeEnCours?episodeEnCours.totalMontant-episodeEnCours.totalPayéPatient:0;
+    const dateDernier=episodes[episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
     
     return `
-      <div class="dossier-row" style="cursor:pointer" onclick="openPatientEpisodes('${p._id}')">
-        <div class="dossier-head">
-          <div>
-            <div class="dossier-patient">${p.prenom} ${p.nom}</div>
-            <div style="font-size:11px;color:var(--text-soft);font-family:var(--mono)">${p.alafiaId}</div>
-          </div>
-          <div style="text-align:right">
-            ${episodeEnCours?`<span class="chip chip-pending">🔴 EN COURS (${fmt(reste)} FCFA)</span>`:`<span class="chip chip-ok">✅ COMPLÉTÉ</span>`}
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--text-soft);margin-top:8px">
-          ${episodes.length} épisode(s) à ${currentHopital.nom}
-        </div>
-      </div>
+      <tr onclick="openPatientEpisodes('${p._id}')">
+        <td class="col-id">${p.alafiaId}</td>
+        <td class="col-dates">${dateDernier!==new Date(0)?new Date(dateDernier).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}):"--"}</td>
+        <td class="col-etat">
+          ${episodeEnCours?`<span class="chip chip-pending">🔴 EN COURS</span>`:`<span class="chip chip-ok">✅ COMPLÉTÉ</span>`}
+        </td>
+      </tr>
     `;
   }).join("");
 }
+
+window.filterDossiersList=async()=>{
+  showOv("Filtrage...");
+  const pts=await getDocs(collection(db,"patients"));
+  hideOv();
+  
+  let patients=pts.docs
+    .map(d=>({...d.data(),_id:d.id}))
+    .filter(p=>p.episodes&&p.episodes.some(ep=>ep.hopitalId===currentHopital._id));
+  
+  patients.sort((a,b)=>{
+    const lastEpA=a.episodes[a.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    const lastEpB=b.episodes[b.episodes.length-1]?.dateDebut?.toDate?.()??new Date(0);
+    return lastEpB-lastEpA;
+  });
+  
+  displayPatientsList(patients);
+};
 
 window.filterPatients=async()=>{
   showOv("Filtrage...");
@@ -959,17 +983,20 @@ function displayEpisodeDetail(patient,episode){
       <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
         <div style="font-size:13px;color:var(--text-soft);margin-bottom:6px;font-weight:600">🏥 Épisode</div>
         <div style="font-size:14px;font-weight:600">${new Date(episode.dateDebut.toDate?.()??episode.dateDebut).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"})} - ${episode.hopitalNom}</div>
-        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">Statut :<span class="chip ${episode.statut==="en cours" ? "chip-pending" : "chip-ok"}"style="display:inline-flex;margin-left:6px">${episode.statut}</span>
+        <div style="font-size:12px;color:var(--text-soft);margin-top:4px">Statut : <span class="chip ${episode.statut==="en cours" ? "chip-pending" : "chip-ok"}" style="display:inline-flex;margin-left:6px">${episode.statut}</span></div>
       </div>
     </div>
     
     <div class="card">
-      <div style="font-size:14px;font-weight:700;margin-bottom:12px">🩺 Historique médical</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700">🩺 Actes médicaux</div>
+        ${episode.statut==="en cours"?`<button class="btn btn-primary btn-sm" onclick="addActeToEpisode('${patient._id}', '${episode.id}')">➕ Ajouter</button>`:""}
+      </div>
       <div id="actes-detail"></div>
     </div>
     
     <div class="card">
-      <div style="font-size:14px;font-weight:700;margin-bottom:12px">💳 Historique paiements</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">💳 Paiements</div>
       <div id="paiements-detail"></div>
     </div>
     
@@ -986,9 +1013,8 @@ function displayEpisodeDetail(patient,episode){
     `:""}
   `;
   
-  // Affiche les détails
   displayEpisodeContent(patient,episode);
-}
+};
 
 function displayEpisodeContent(patient,episode){
   // Actes
@@ -1033,6 +1059,9 @@ function displayEpisodeContent(patient,episode){
   }
   
   // Résumé
+  // Résumé
+  const traitementTermine=episode.traitementTermine||false;
+  
   $("resume-detail").innerHTML=`
     <div style="background:var(--bg);border-radius:8px;padding:12px">
       <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
@@ -1047,6 +1076,7 @@ function displayEpisodeContent(patient,episode){
         <span>Payé patient :</span>
         <strong style="color:var(--text)">${fmt(totalPayé)} FCFA</strong>
       </div>
+      
       ${reste>0?`
         <div style="margin-top:10px;padding:10px;background:var(--gold-light);border-radius:6px;border-left:3px solid var(--gold)">
           <div style="font-size:12px;color:#7A4500;margin-bottom:8px">
@@ -1057,14 +1087,27 @@ function displayEpisodeContent(patient,episode){
             <button class="btn btn-primary btn-sm" onclick="addMoMoPayment('${patient._id}', '${episode.id}', ${reste})" style="flex:1;padding:8px 12px;font-size:12px">📱 MoMo</button>
           </div>
         </div>
-      `:`
+      `:""}
+      
+      ${reste<=0&&!traitementTermine?`
+        <div style="margin-top:10px;padding:10px;background:var(--blue-light);border-radius:6px;border-left:3px solid var(--blue)">
+          <div style="font-size:12px;color:var(--blue);margin-bottom:8px">
+            <strong>✅ Paiement complet</strong>
+          </div>
+          <button class="btn btn-blue btn-sm" onclick="markTreatmentComplete('${patient._id}', '${episode.id}')" style="width:100%;padding:8px 12px;font-size:12px;background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:white;border:none">
+            ✓ Marquer traitement terminé
+          </button>
+        </div>
+      `:""}
+      
+      ${traitementTermine?`
         <div style="margin-top:10px;padding:10px;background:var(--green-light);border-radius:6px;border-left:3px solid var(--green)">
           <div style="font-size:12px;color:var(--green);margin-bottom:8px">
-            <strong>✅ Entièrement payé</strong>
+            <strong>✅ Traitement terminé</strong>
           </div>
           <button class="btn btn-green btn-sm" onclick="closeEpisode('${patient._id}', '${episode.id}')" style="width:100%;padding:8px 12px;font-size:12px">🔒 Clôturer épisode</button>
         </div>
-      `}
+      `:""}
     </div>
   `;
 }
@@ -1089,6 +1132,12 @@ window.addActeToEpisode=async(patientId, episodeId)=>{
   }
   
   const episode=patient.episodes[episodeIdx];
+  
+  // Vérifie que l'épisode est en cours
+  if(episode.statut!=="en cours"){
+    showToast("❌ Impossible d'ajouter un acte à un épisode complété","#D63031");
+    return;
+  }
   
   // Affiche le modal pour ajouter un acte
   const m=document.createElement("div");
@@ -1435,6 +1484,76 @@ window.addMoMoPayment=async(patientId, episodeId, montant)=>{
   };
 };
 
+window.markTreatmentComplete=async(patientId, episodeId)=>{
+  const m=document.createElement("div");
+  m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;display:flex;align-items:flex-end;justify-content:center;padding:1rem";
+  m.innerHTML=`
+    <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px">✓ Marquer traitement terminé</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Confirmez la fin du traitement pour ce patient</div>
+      
+      <div style="background:var(--blue-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--blue)">
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Statut</div>
+        <div style="font-size:16px;font-weight:800;color:var(--blue)">✓ TRAITEMENT TERMINÉ</div>
+      </div>
+      
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px;line-height:1.6">
+        Une fois le traitement marqué comme terminé, vous pourrez clôturer l'épisode médical. Vous pouvez toujours ajouter des actes avant de clôturer.
+      </div>
+      
+      <div id="mark-complete-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
+      
+      <div style="display:flex;gap:10px">
+        <button id="mark-complete-cancel" style="flex:1;padding:12px;border:1.5px solid var(--border);background:white;border-radius:10px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600">Annuler</button>
+        <button id="mark-complete-confirm" style="flex:2;padding:12px;background:linear-gradient(135deg,var(--blue),#2563EB);color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)">✓ Confirmer</button>
+      </div>
+    </div>`;
+  
+  document.body.appendChild(m);
+  
+  const confirmBtn=m.querySelector("#mark-complete-confirm");
+  const cancelBtn=m.querySelector("#mark-complete-cancel");
+  const errDiv=m.querySelector("#mark-complete-err");
+  
+  confirmBtn.onclick=async()=>{
+    showOv("Mise à jour du traitement...");
+    
+    try{
+      const patientRef=doc(db,"patients",patientId);
+      const patientSnap=await getDoc(patientRef);
+      const patient={...patientSnap.data(),_id:patientSnap.id};
+      const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
+      const episode=patient.episodes[episodeIdx];
+      
+      // Marquer le traitement comme terminé
+      episode.traitementTermine=true;
+      episode.dateTraitementTermine=new Date();
+      
+      await updateDoc(patientRef,{
+        episodes:patient.episodes,
+        updatedAt:new Date()
+      });
+      
+      hideOv();
+      document.body.removeChild(m);
+      showToast("✅ Traitement marqué comme terminé !","#0A7C5C");
+      
+      // Rafraîchit l'affichage
+      displayEpisodeDetail(patient,episode);
+      
+    }catch(e){
+      hideOv();
+      errDiv.textContent="Erreur lors de la mise à jour. Réessayez.";
+      errDiv.style.display="block";
+      console.error(e);
+    }
+  };
+  
+  cancelBtn.onclick=()=>{
+    document.body.removeChild(m);
+  };
+};
+
 // ══════════════════════════════════════════
 // ── CLÔTURER ÉPISODE
 // ══════════════════════════════════════════
@@ -1444,15 +1563,15 @@ window.closeEpisode=async(patientId, episodeId)=>{
   m.innerHTML=`
     <div style="background:white;width:100%;max-width:500px;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem">
       <div style="font-size:18px;font-weight:800;margin-bottom:6px">🔒 Clôturer l'épisode</div>
-      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Confirmez la clôture de cet épisode médical</div>
+      <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">Confirmez la clôture complète de cet épisode médical</div>
       
       <div style="background:var(--green-light);border-radius:12px;padding:14px;margin-bottom:16px;border:1.5px solid var(--green)">
-        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Statut</div>
-        <div style="font-size:16px;font-weight:800;color:var(--green)">✅ COMPLÉTÉ</div>
+        <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px">Statut final</div>
+        <div style="font-size:16px;font-weight:800;color:var(--green)">✅ ÉPISODE COMPLÉTÉ</div>
       </div>
       
       <div style="font-size:12px;color:var(--text-soft);margin-bottom:16px;line-height:1.6">
-        Cet épisode sera marqué comme complété et ne pourra plus être modifié.
+        Cet épisode sera marqué comme complété et ne pourra plus être modifié. Tous les actes médicaux et paiements seront finalisés.
       </div>
       
       <div id="close-err" class="alert alert-err" style="display:none;margin-bottom:12px"></div>
@@ -1478,6 +1597,14 @@ window.closeEpisode=async(patientId, episodeId)=>{
       const patient={...patientSnap.data(),_id:patientSnap.id};
       const episodeIdx=patient.episodes.findIndex(ep=>ep.id===episodeId);
       const episode=patient.episodes[episodeIdx];
+      
+      // Vérifie que le traitement est terminé
+      if(!episode.traitementTermine){
+        hideOv();
+        errDiv.textContent="❌ Le traitement doit être marqué comme terminé avant de clôturer l'épisode.";
+        errDiv.style.display="block";
+        return;
+      }
       
       // Marquer comme complété
       episode.statut="complété";
