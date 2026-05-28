@@ -781,11 +781,19 @@ window.reloadPatientsList=async function(){
   
   $("dossiers-list").innerHTML=`
     <div style="margin-bottom:1rem">
-      <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..." 
-        style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;margin-bottom:12px"
-        oninput="filterPatients()"/>
+      <input type="text" id="search-patient-input" placeholder="🔍 Chercher un patient..."
     </div>
-    <div id="patients-list-container"></div>
+    <table class="dossiers-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom Complet</th>
+          <th>Date</th>
+          <th>État</th>
+        </tr>
+      </thead>
+      <tbody id="dossiers-tbody"></tbody>
+    </table>
   `;
   
   displayPatientsList(patients);
