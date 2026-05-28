@@ -677,23 +677,9 @@ window.submitNewDossier=async()=>{
     episodes.push(episode);
     hPt.episodes=episodes;  // ← AJOUTER CETTE LIGNE
 
-    // ✅ Cette notification doit exister:
-    const notification={
-          id:"notif_"+Date.now(),
-          type:"paiement_momo",
-          episodeId:episode.id,
-          montant:montant,
-          statut:"en attente",
-          dateCreation:new Date(),
-          message:`Veuillez valider le paiement MoMo de ${fmt(montant)} FCFA`
-        };
-
-    hPt.notifications=hPt.notifications||[];  // ← Utilise hPt
-    hPt.notifications.push(notification);
-
+    // Mise à jour des paiements SEULEMENT
     await updateDoc(patientRef,{
-      episodes:hPt.episodes,                   // ← Utilise hPt
-      notifications:hPt.notifications,         // ← Utilise hPt
+      episodes:patient.episodes,
       updatedAt:new Date()
     });
 

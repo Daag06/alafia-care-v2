@@ -553,19 +553,27 @@ window.doLogin=async()=>{
       });
     }
     // Listener temps réel sur les notifications du patient
-    onSnapshot(doc(db,"patients",p._id),snap=>{
-      if(snap.exists()){
-        currentUser={...snap.data(),_id:snap.id};
-        const newNotifs=currentUser.notifications||[];
-        if(newNotifs.length>0&&currentUser.notifications){
-          showToast("🔔 Nouvelle notification de paiement !","#1A73E8");
-          // Rafraîchir l'affichage si on est dans l'onglet notifications
-          if($("pane-notif").style.display!=="none"){
-            renderNotifications();
-          }
-        }
-      }
-    });
+let lastNotifCount=p.notifications?.length||0;  // ← AJOUTER AVANT LE LISTENER
+
+onSnapshot(doc(db,"patients",p._id),snap=>{
+  if(snap.exists()){
+    const updatedUser={...snap.data(),_id:snap.id};
+    const currentNotifCount=updatedUser.notifications?.length||0;
+    
+    // Affiche le toast SEULEMENT si une NOUVELLE notif arrive
+    if(currentNotifCount>lastNotifCount){
+      showToast("🔔 Nouvelle notification de paiement !","#1A73E8");
+      lastNotifCount=currentNotifCount;
+    }
+    
+    currentUser=updatedUser;
+    
+    // Rafraîchir l'affichage si on est dans l'onglet notifications
+    if($("pane-notif").style.display!=="none"){
+      renderNotifications();
+    }
+  }
+});
   }else{
     hideOv();
     $("login-err").textContent="Aucun compte trouvé. Vérifiez votre numéro.";
