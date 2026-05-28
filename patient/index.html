@@ -400,7 +400,7 @@ select.inp{cursor:pointer}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,where,onSnapshot}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,where,onSnapshot,getDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const db=getFirestore(initializeApp({
   apiKey:"AIzaSyAT5wcCQJ1dqzJZ1y6WAwXdGd10QX9oM5Y",
@@ -553,15 +553,19 @@ window.doLogin=async()=>{
       });
     }
     // Listener temps réel sur les notifications du patient
-      onSnapshot(doc(db,"patients",p._id),snap=>{
-        if(snap.exists()){
-          currentUser={...snap.data(),_id:snap.id};
-          const newNotifs=currentUser.notifications||[];
-          if(newNotifs.length>0&&currentUser.notifications){
-            showToast("🔔 Nouvelle notification de paiement !","#1A73E8");
+    onSnapshot(doc(db,"patients",p._id),snap=>{
+      if(snap.exists()){
+        currentUser={...snap.data(),_id:snap.id};
+        const newNotifs=currentUser.notifications||[];
+        if(newNotifs.length>0&&currentUser.notifications){
+          showToast("🔔 Nouvelle notification de paiement !","#1A73E8");
+          // Rafraîchir l'affichage si on est dans l'onglet notifications
+          if($("pane-notif").style.display!=="none"){
+            renderNotifications();
           }
         }
-      });
+      }
+    });
   }else{
     hideOv();
     $("login-err").textContent="Aucun compte trouvé. Vérifiez votre numéro.";
@@ -846,20 +850,32 @@ async function renderNotifications(){
     return;
   }
   
+  // AJOUTER CES LIGNES ICI :
+  showOv("Chargement des notifications...");
+  const patientRef=doc(db,"patients",currentUser._id);
+  const patientSnap=await getDoc(patientRef);
+  if(patientSnap.exists()){
+    currentUser={...patientSnap.data(),_id:patientSnap.id};
+  }
+  hideOv();
+
   const notifs=currentUser.notifications||[];
-  
-  if(notifs.length===0){
-    $("notif-content").innerHTML='<div class="empty"><div class="empty-icon">🔔</div><div class="empty-text">Aucune notification pour le moment</div></div>';
-    return;
-  }
-  
-  // Filtre les notifications de paiement MoMo en attente
-  const paymentNotifs=notifs.filter(n=>n.type==="paiement_momo"&&n.statut==="en attente");
-  
-  if(paymentNotifs.length===0){
-    $("notif-content").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Aucune notification en attente</div></div>';
-    return;
-  }
+
+if(notifs.length===0){
+  $("notif-content").innerHTML='<div class="empty"><div class="empty-icon">🔔</div><div class="empty-text">Aucune notification pour le moment</div></div>';
+  return;
+}
+
+// Filtre les notifications de paiement MoMo en attente
+const paymentNotifs=notifs.filter(n=>n.type==="paiement_momo"&&n.statut==="en attente");
+
+console.log("Notifications trouvées :", notifs);
+console.log("Notifications de paiement :", paymentNotifs);
+
+if(paymentNotifs.length===0){
+  $("notif-content").innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Aucune notification en attente</div></div>';
+  return;
+}
   
   $("notif-content").innerHTML=paymentNotifs.map(n=>`
     <div class="form-section" style="border-left:4px solid var(--gold)">
@@ -904,29 +920,13 @@ window.validatePaymentNotification=async(notificationId, episodeId, montant)=>{
     currentUser.notifications[notifIdx].statut="confirmé";
     currentUser.notifications[notifIdx].dateValidation=new Date();
     
-    // Met à jour dans Firestore
-    await updateDoc(doc(db,"patients",currentUser._id),{
-      notifications:currentUser.notifications,
-      updatedAt:new Date()
-    });
-    
     hideOv();
     showToast("✅ Paiement MoMo validé !","#0A7C5C");
-    // Trouve le patient qui a cet épisode et met à jour le paiement
-    const allPatients=await getDocs(collection(db,"patients"));
-    let patientWithEpisode=null;
     
-    for(const patSnap of allPatients.docs){
-      const patData=patSnap.data();
-      if(patData.episodes&&patData.episodes.some(ep=>ep.id===episodeId)){
-        patientWithEpisode={...patData,_id:patSnap.id};
-        break;
-      }
-    }
-
-    if(patientWithEpisode){
-      const epIdx=patientWithEpisode.episodes.findIndex(ep=>ep.id===episodeId);
-      const episode=patientWithEpisode.episodes[epIdx];
+    // Trouve l'épisode dans les épisodes du patient actuel
+    const epIdx=currentUser.episodes.findIndex(ep=>ep.id===episodeId);
+    if(epIdx!==-1){
+      const episode=currentUser.episodes[epIdx];
       
       // Trouve le paiement MoMo en attente et change son statut
       const paiementIdx=episode.paiements.findIndex(p=>p.type==="momo"&&p.statut==="en attente"&&p.montant===montant);
@@ -937,21 +937,12 @@ window.validatePaymentNotification=async(notificationId, episodeId, montant)=>{
         // Recalcule le total payé
         const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
         episode.totalPayéPatient=totalPayé;
-        
-        // Si entièrement payé, marquer comme complété
-        if(totalPayé>=episode.totalMontant){
-          episode.statut="complété";
-        }
       }
-      
-      // Met à jour dans Firestore
-      await updateDoc(doc(db,"patients",patientWithEpisode._id),{
-        episodes:patientWithEpisode.episodes
-      });
     }
-
-    // Met à jour aussi les notifications du patient
+    
+    // Sauvegarde tout en une seule requête
     await updateDoc(doc(db,"patients",currentUser._id),{
+      episodes:currentUser.episodes,
       notifications:currentUser.notifications,
       updatedAt:new Date()
     });
@@ -1078,8 +1069,23 @@ window.momoStep=async(step)=>{
   if(step===2){
     setTimeout(async()=>{
       if(momoDestination==="hopital"&&momoDocId){
-        // Paiement du reste à charge → hôpital
-        await updateDoc(doc(db,"dossiers",momoDocId),{paye:true,payeAt:new Date()});
+  // Paiement du reste à charge → hôpital
+  // ✅ AJOUTER: Récupérer le patient et mettre à jour l'épisode
+  const patientSnap=await getDoc(doc(db,"patients",currentUser.alafiaId));
+  if(patientSnap.exists()){
+    const patient={...patientSnap.data(),_id:patientSnap.id};
+    // Chercher le paiement en attente dans l'épisode
+    patient.episodes.forEach(ep=>{
+      const paiementEnAttente=ep.paiements.find(p=>p.statut==="en attente"&&p.type==="momo");
+      if(paiementEnAttente){
+        paiementEnAttente.statut="confirmé";
+        paiementEnAttente.confirmeAt=new Date();
+      }
+    });
+    await updateDoc(doc(db,"patients",currentUser.alafiaId),{episodes:patient.episodes,updatedAt:new Date()});
+  }
+  
+  await updateDoc(doc(db,"dossiers",momoDocId),{paye:true,payeAt:new Date()});
         $("momo-s1").classList.remove("active");
         $("momo-s2").classList.remove("active");
         $("momo-s3").classList.add("active");

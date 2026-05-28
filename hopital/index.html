@@ -172,7 +172,8 @@ html,body{height:100%;background:var(--bg);font-family:var(--font);color:var(--t
 .dossiers-table tbody tr{border-bottom:1px solid var(--border);transition:background .2s;cursor:pointer}
 .dossiers-table tbody tr:hover{background:var(--bg)}
 .dossiers-table td{padding:14px;font-size:13px;color:var(--text-mid)}
-.dossiers-table .col-id{font-weight:700;color:var(--text);font-family:var(--mono);font-size:14px}
+.dossiers-table .col-id{font-weight:700;color:var(--text);font-family:var(--mono);font-size:13px}
+.dossiers-table .col-nom{font-weight:600;color:var(--text);font-size:13px}
 .dossiers-table .col-dates{color:var(--text-soft);font-size:12px}
 .dossiers-table .col-etat{text-align:center}
 .dossiers-search-box{margin-bottom:1rem}
@@ -364,6 +365,7 @@ let twoFACode=null,twoFAPending=null;
 let histFilter="tous";
 let unsubDossiers=null;
 let allDossiers=[];
+let currentEpisodeUnsub=null;  // ← AJOUTER CETTE LIGNE
 
 // ── HELPERS ──
 const $=id=>document.getElementById(id);
@@ -665,19 +667,36 @@ window.submitNewDossier=async()=>{
       paiements:[],
       totalMontant:montant,
       totalRemboursement:remb||0,
-      totalPayéPatient:0
+      totalPayéPatient:0,
+      traitementTermine:false
     };
     
     // Ajoute l'épisode au patient
     const patientRef=doc(db,"patients",hPt._id);
     const episodes=hPt.episodes||[];
     episodes.push(episode);
-    
+    hPt.episodes=episodes;  // ← AJOUTER CETTE LIGNE
+
+    // ✅ Cette notification doit exister:
+    const notification={
+          id:"notif_"+Date.now(),
+          type:"paiement_momo",
+          episodeId:episode.id,
+          montant:montant,
+          statut:"en attente",
+          dateCreation:new Date(),
+          message:`Veuillez valider le paiement MoMo de ${fmt(montant)} FCFA`
+        };
+
+    hPt.notifications=hPt.notifications||[];  // ← Utilise hPt
+    hPt.notifications.push(notification);
+
     await updateDoc(patientRef,{
-      episodes:episodes,
+      episodes:hPt.episodes,                   // ← Utilise hPt
+      notifications:hPt.notifications,         // ← Utilise hPt
       updatedAt:new Date()
     });
-    
+
     hideOv();
     showToast("✅ Dossier créé ! Choix du paiement...","#0A7C5C");
     
@@ -723,22 +742,29 @@ window.renderDossiersHopital=async function(){
   
   // Affiche le tableau
   $("dossiers-list").innerHTML=`
-    <table class="dossiers-table">
-      <thead>
-        <tr>
-          <th>ID Patients</th>
-          <th>Dates</th>
-          <th>États</th>
-        </tr>
-      </thead>
-      <tbody id="dossiers-tbody"></tbody>
-    </table>
+  <table class="dossiers-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nom Complet</th>
+        <th>Date</th>
+        <th>État</th>
+      </tr>
+    </thead>
+    <tbody id="dossiers-tbody"></tbody>
+  </table>
   `;
   
   displayPatientsList(patients);
 };
 
 window.reloadPatientsList=async function(){
+  // Nettoyer le listener
+  if(currentEpisodeUnsub){
+    currentEpisodeUnsub();
+    currentEpisodeUnsub=null;
+  }
+
   showOv("Chargement...");
   const pts=await getDocs(collection(db,"patients"));
   hideOv();
@@ -788,6 +814,7 @@ function displayPatientsList(patients){
     return `
       <tr onclick="openPatientEpisodes('${p._id}')">
         <td class="col-id">${p.alafiaId}</td>
+        <td class="col-nom">${p.prenom} ${p.nom}</td>
         <td class="col-dates">${dateDernier!==new Date(0)?new Date(dateDernier).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}):"--"}</td>
         <td class="col-etat">
           ${episodeEnCours?`<span class="chip chip-pending">🔴 EN COURS</span>`:`<span class="chip chip-ok">✅ COMPLÉTÉ</span>`}
@@ -906,6 +933,12 @@ function displayEpisodesList(patient,episodes){
 }
 
 window.openEpisodeDetail=async(patientId, episodeId)=>{
+  // Nettoyer le listener précédent
+  if(currentEpisodeUnsub){
+    currentEpisodeUnsub();
+    currentEpisodeUnsub=null;
+  }
+  
   showOv("Chargement de l'épisode...");
   const patientRef=doc(db,"patients",patientId);
   const patientSnap=await getDoc(patientRef);
@@ -925,6 +958,26 @@ window.openEpisodeDetail=async(patientId, episodeId)=>{
   }
   
   displayEpisodeDetail(patient,episode);
+  
+  // Ajouter un listener pour voir les changements en temps réel
+  currentEpisodeUnsub=onSnapshot(patientRef,snap=>{
+    if(snap.exists()){
+      const updatedPatient={...snap.data(),_id:snap.id};
+      const updatedEpisode=updatedPatient.episodes.find(ep=>ep.id===episodeId);
+      if(updatedEpisode){
+        // Vérifier si un paiement MoMo est passé de "en attente" à "confirmé"
+        const ancienPaiement=episode.paiements.find(p=>p.type==="momo"&&p.statut==="en attente");
+        const nouveauPaiement=updatedEpisode.paiements.find(p=>p.type==="momo"&&p.statut==="confirmé");
+        
+        if(ancienPaiement&&nouveauPaiement&&nouveauPaiement.montant===ancienPaiement.montant){
+          // Le patient a confirmé le paiement MoMo!
+          episode=updatedEpisode; // ← Met à jour la référence
+          showToast("✅ Paiement MoMo confirmé par le patient !","#0A7C5C");
+          displayEpisodeDetail(updatedPatient,updatedEpisode);
+        }
+      }
+    }
+  });
 };
 
 // ══════════════════════════════════════════
@@ -966,7 +1019,7 @@ function displayEpisodeDetailInFormZone(patient,episode){
       <div id="resume-detail"></div>
     </div>
     
-    ${episode.statut==="en cours"?`
+    ${episode.statut==="en cours"&&!episode.traitementTermine?`
       <div style="display:flex;gap:10px">
         <button class="btn btn-secondary" onclick="hReset()" style="flex:1">Nouvelle recherche</button>
         <button class="btn btn-green" onclick="addActeToEpisode('${patient._id}', '${episode.id}')" style="flex:1">➕ Ajouter acte</button>
@@ -1000,10 +1053,10 @@ function displayEpisodeDetail(patient,episode){
     </div>
     
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:14px;font-weight:700">🩺 Actes médicaux</div>
-        ${episode.statut==="en cours"?`<button class="btn btn-primary btn-sm" onclick="addActeToEpisode('${patient._id}', '${episode.id}')">➕ Ajouter</button>`:""}
-      </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="font-size:14px;font-weight:700">🩺 Actes médicaux</div>
+    ${episode.statut==="en cours"&&!episode.traitementTermine?`<button class="btn btn-primary btn-sm" onclick="addActeToEpisode('${patient._id}', '${episode.id}')">➕ Ajouter</button>`:""}
+  </div>
       <div id="actes-detail"></div>
     </div>
     
@@ -1101,7 +1154,7 @@ function displayEpisodeContent(patient,episode){
         </div>
       `:""}
       
-      ${reste<=0&&!traitementTermine?`
+      ${reste<=0&&!episode.traitementTermine?`
         <div style="margin-top:10px;padding:10px;background:var(--blue-light);border-radius:6px;border-left:3px solid var(--blue)">
           <div style="font-size:12px;color:var(--blue);margin-bottom:8px">
             <strong>✅ Paiement complet</strong>
@@ -1112,7 +1165,7 @@ function displayEpisodeContent(patient,episode){
         </div>
       `:""}
       
-      ${traitementTermine?`
+      ${episode.traitementTermine?`
         <div style="margin-top:10px;padding:10px;background:var(--green-light);border-radius:6px;border-left:3px solid var(--green)">
           <div style="font-size:12px;color:var(--green);margin-bottom:8px">
             <strong>✅ Traitement terminé</strong>
@@ -1356,16 +1409,11 @@ window.addCashPayment=async(patientId, episodeId, montant)=>{
       const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
       episode.totalPayéPatient=totalPayé;
       
-      // Si entièrement payé, marquer comme complété
-      if(totalPayé>=episode.totalMontant){
-        episode.statut="complété";
-      }
-      
       // Crée une notification pour le patient
       const notification={
         id:"notif_"+Date.now(),
         type:"paiement_momo",
-        episodeId:episodeId,
+        episodeId:episode.id,
         montant:montant,
         statut:"en attente",
         dateCreation:new Date(),
@@ -1465,14 +1513,25 @@ window.addMoMoPayment=async(patientId, episodeId, montant)=>{
       episode.paiements.push(paiement);
       const totalPayé=episode.paiements.reduce((s,p)=>s+p.montant,0);
       episode.totalPayéPatient=totalPayé;
-      
-      // Si entièrement payé, marquer comme complété
-      if(totalPayé>=episode.totalMontant){
-        episode.statut="complété";
-      }
-      
+
+      // ✅ CRÉER LA NOTIFICATION
+      const notification={
+        id:"notif_"+Date.now(),
+        type:"paiement_momo",
+        episodeId:episodeId,
+        montant:montant,
+        statut:"en attente",
+        dateCreation:new Date(),
+        message:`Veuillez valider le paiement MoMo de ${fmt(montant)} FCFA`
+      };
+
+      patient.notifications=patient.notifications||[];
+      patient.notifications.push(notification);
+
+      // ✅ AJOUTER notifications DANS updateDoc
       await updateDoc(patientRef,{
         episodes:patient.episodes,
+        notifications:patient.notifications,  // ← CETTE LIGNE
         updatedAt:new Date()
       });
       
